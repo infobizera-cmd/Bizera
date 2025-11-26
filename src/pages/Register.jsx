@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import bizeraLogo from '../assets/bizera.png'
 import bizeraLogoMobile from '../assets/bizera2.png'
 import { authAPI } from '../services/api'
+import { saveUserData } from '../utils/userStorage'
 // import FeatureCard from '../components/FeatureCard'
 
 const Register = () => {
@@ -67,6 +68,18 @@ const Register = () => {
 
       // Check if registration was successful (200 or 201 status)
       if (response.status === 200 || response.status === 201) {
+        // Save user data to localStorage
+        saveUserData({
+          name: formData.name.trim(),
+          surname: formData.surname.trim(),
+          email: formData.email.trim(),
+          phoneNumber: formData.phoneNumber.trim(),
+          birthDate: formData.birthDate,
+          businessName: formData.businessName.trim(),
+          businessCategory: formData.businessCategory,
+          role: 'Admin' // Default role
+        })
+
         // Store token if provided by backend
         if (response.data?.token) {
           localStorage.setItem('bizera_token', response.data.token)

@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import bizeraLogo from '../assets/bizera.png'
 import bizeraLogoMobile from '../assets/bizera2.png'
 import { authAPI } from '../services/api'
+import { saveUserData, getUserData } from '../utils/userStorage'
 // import FeatureCard from '../components/FeatureCard'
 
 const Login = () => {
@@ -78,6 +79,28 @@ const Login = () => {
           localStorage.setItem('bizera_rememberMe', 'true')
         } else {
           localStorage.removeItem('bizera_rememberMe')
+        }
+
+        // Save or update user data from API response or use existing data
+        if (response?.data?.user) {
+          saveUserData({
+            ...response.data.user,
+            email: response.data.user.email || email
+          })
+        } else {
+          // If no user data from API, check if we have existing data
+          const existingData = getUserData()
+          if (!existingData) {
+            // If no existing data, create minimal user data from email
+            const emailParts = email.split('@')
+            const name = emailParts[0].charAt(0).toUpperCase() + emailParts[0].slice(1)
+            saveUserData({
+              name: name,
+              surname: '',
+              email: email,
+              role: 'Admin'
+            })
+          }
         }
         
         // Navigate to dashboard on success immediately
