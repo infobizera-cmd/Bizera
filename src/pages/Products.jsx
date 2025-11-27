@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { authAPI, productStockAPI } from '../services/api'
 import { Icon } from './Dashboard'
-import { clearUserData, getUserData } from '../utils/userStorage'
+import { clearUserData } from '../utils/userStorage'
+import TopBar from '../components/TopBar'
 
 const Products = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useTranslation()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -51,7 +54,7 @@ const Products = () => {
         // Check if user is authenticated (cookie-based auth)
         const isAuthenticated = localStorage.getItem('bizera_auth') === 'true'
         if (!isAuthenticated) {
-          setError('Giriş edilməyib. Zəhmət olmasa yenidən daxil olun.')
+          setError(t('products.notAuthenticated'))
           setLoading(false)
           return
         }
@@ -76,9 +79,9 @@ const Products = () => {
         console.error('Error loading products:', err)
         // Don't logout on 401, just show error
         if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
-          setError('Giriş vaxtı bitib və ya token yoxdur. Zəhmət olmasa yenidən daxil olun.')
+          setError(t('products.tokenExpired'))
         } else {
-          setError(err.message || 'Məhsulları yükləmək mümkün olmadı.')
+          setError(err.message || t('products.errorLoading'))
         }
       } finally {
         setLoading(false)
@@ -86,7 +89,7 @@ const Products = () => {
     }
 
     loadProducts()
-  }, [])
+  }, [t])
 
   // Clear error message after 5 seconds
   useEffect(() => {
@@ -148,8 +151,8 @@ const Products = () => {
       const isAuthenticated = localStorage.getItem('bizera_auth') === 'true'
       
       if (!isAuthenticated) {
-        setError('Giriş edilməyib. Zəhmət olmasa yenidən daxil olun.')
-        showToast('Giriş edilməyib. Zəhmət olmasa yenidən daxil olun.', 'error')
+        setError(t('products.notAuthenticated'))
+        showToast(t('products.notAuthenticated'), 'error')
         return
       }
       
@@ -167,12 +170,12 @@ const Products = () => {
         // Create new product
         const response = await productStockAPI.createProduct(productData)
         if (response?.data || response?.status === 200) {
-          showToast('Məhsul uğurla əlavə edildi!', 'success')
+          showToast(t('products.productAdded'), 'success')
         }
       } else {
         // Update existing product
         await productStockAPI.updateProduct(editingProduct.id, productData)
-        showToast('Məhsul uğurla yeniləndi!', 'success')
+        showToast(t('products.productUpdated'), 'success')
       }
 
       // Reload products
@@ -193,8 +196,8 @@ const Products = () => {
       closeEditModal()
     } catch (err) {
       console.error('Error saving product:', err)
-      setError(err.message || 'Məhsulu yadda saxlaq mümkün olmadı.')
-      showToast(isNewProduct ? 'Məhsul əlavə edilərkən xəta baş verdi' : 'Məhsul yenilənərkən xəta baş verdi', 'error')
+      setError(err.message || t('products.errorSaving'))
+      showToast(isNewProduct ? t('products.errorAdding') : t('products.errorUpdating'), 'error')
     }
   }
 
@@ -212,7 +215,7 @@ const Products = () => {
     if (productToDelete) {
       try {
         await productStockAPI.deleteProduct(productToDelete.id)
-        showToast('Məhsul uğurla silindi!', 'success')
+        showToast(t('products.productDeleted'), 'success')
         
         // Reload products
         const response = await productStockAPI.getProducts()
@@ -232,8 +235,8 @@ const Products = () => {
         closeDeleteConfirm()
       } catch (err) {
         console.error('Error deleting product:', err)
-        setError(err.message || 'Məhsulu silmək mümkün olmadı.')
-        showToast('Məhsul silinərkən xəta baş verdi', 'error')
+        setError(err.message || t('products.errorDeleting'))
+        showToast(t('products.errorDeletingProcess'), 'error')
       }
     }
   }
@@ -265,7 +268,7 @@ const Products = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
@@ -276,23 +279,23 @@ const Products = () => {
       
       <div className="flex">
         {/* Sidebar */}
-        <aside className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 shrink-0 flex-col bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out ${
+        <aside className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 shrink-0 flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } ${sidebarOpen ? 'flex' : 'hidden md:flex'}`}>
-          <div className="px-8 pt-8 pb-6 border-b border-slate-200">
-            <div className="text-2xl font-extrabold tracking-tight text-[#002750]">BizEra</div>
+          <div className="px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700">
+            <div className="text-2xl font-extrabold tracking-tight text-[#002750] dark:text-white">BizEra</div>
           </div>
 
           <nav className="flex-1 flex flex-col text-[15px] font-semibold">
             <div className="flex-1 flex flex-col">
               {[
-                { label: 'Dashboard', path: '/dashboard', icon: Icon.sidebarDashboard },
-                { label: 'Məhsullar', path: '/products', icon: Icon.sidebarProducts },
-                { label: 'Satışlar', path: '/sales', icon: Icon.sidebarSales },
-                { label: 'Tapşırıqlar', path: '/tasks', icon: Icon.sidebarTasks },
-                { label: 'Müştərilər', path: '/customers', icon: Icon.sidebarCustomers },
-                { label: 'Xərclər', path: '/expenses', icon: Icon.sidebarExpenses },
-                { label: 'Tənzimləmələr', path: '/settings', icon: Icon.sidebarSettings }
+                { label: t('sidebar.dashboard'), path: '/dashboard', icon: Icon.sidebarDashboard },
+                { label: t('sidebar.products'), path: '/products', icon: Icon.sidebarProducts },
+                { label: t('sidebar.sales'), path: '/sales', icon: Icon.sidebarSales },
+                { label: t('sidebar.tasks'), path: '/tasks', icon: Icon.sidebarTasks },
+                { label: t('sidebar.customers'), path: '/customers', icon: Icon.sidebarCustomers },
+                { label: t('sidebar.expenses'), path: '/expenses', icon: Icon.sidebarExpenses },
+                { label: t('sidebar.settings'), path: '/settings', icon: Icon.sidebarSettings }
               ].map((item) => {
                 const isActive = location.pathname === item.path
                 const ItemIcon = item.icon
@@ -307,12 +310,12 @@ const Products = () => {
                     className={`w-full flex items-center px-8 py-5 border-b transition-colors ${
                       isActive
                         ? 'bg-[#003A70] text-white border-transparent'
-                        : 'bg-white text-[#003A70] border-[#E6EDF5] hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-[#003A70] dark:text-slate-200 border-[#E6EDF5] dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <ItemIcon
                       className={`mr-4 h-5 w-5 ${
-                        isActive ? 'text-white' : 'text-[#003A70]'
+                        isActive ? 'text-white' : 'text-[#003A70] dark:text-slate-200'
                       }`}
                     />
                     <span>{item.label}</span>
@@ -325,9 +328,9 @@ const Products = () => {
               <button
                 type="button"
                 onClick={logout}
-                className="w-full flex items-center justify-between rounded-xl bg-[#F3F7FB] px-5 py-3 text-[15px] font-semibold text-[#003A70] hover:bg-[#e7f0f9] transition-colors"
+                className="w-full flex items-center justify-between rounded-xl bg-[#F3F7FB] dark:bg-slate-700 px-5 py-3 text-[15px] font-semibold text-[#003A70] dark:text-white hover:bg-[#e7f0f9] dark:hover:bg-slate-600 transition-colors"
               >
-                <span>Çıxış</span>
+                <span>{t('common.logout')}</span>
                 <Icon.sidebarLogout className="h-5 w-5" />
               </button>
             </div>
@@ -337,82 +340,12 @@ const Products = () => {
         {/* Main */}
         <main className="flex-1 w-full md:w-auto">
           {/* Top bar */}
-          <div className="sticky top-0 z-10 bg-white border-b">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-              {/* Mobile Menu Button */}
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
-                aria-label="Open menu"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              
-              <div className="relative w-48 sm:w-72 md:w-96">
-                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                  <Icon.search className="w-4 h-4" />
-                </span>
-                <input
-                  placeholder="Axtar"
-                  className="w-full rounded-xl bg-slate-100 pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Icon.globe className="w-5 h-5 text-slate-600" />
-                <Icon.moon className="w-5 h-5 text-slate-600" />
-                <div className="relative">
-                  <button className="relative p-2 rounded-lg hover:bg-slate-100">
-                    <Icon.bell className="w-5 h-5 text-slate-600" />
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 rounded-full" />
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/profile')}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                >
-                  {(() => {
-                    const userData = getUserData()
-                    const displayName = userData?.fullName || 
-                                     (userData?.name && userData?.surname 
-                                       ? `${userData.name} ${userData.surname}`.trim()
-                                       : userData?.name || 'User')
-                    const displayRole = userData?.role || 'Admin'
-                    const getInitials = () => {
-                      if (userData?.name && userData?.surname) {
-                        return `${userData.name.charAt(0)}${userData.surname.charAt(0)}`.toUpperCase()
-                      }
-                      if (userData?.name) {
-                        return userData.name.charAt(0).toUpperCase()
-                      }
-                      if (userData?.fullName) {
-                        const parts = userData.fullName.split(' ')
-                        if (parts.length >= 2) {
-                          return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase()
-                        }
-                        return userData.fullName.charAt(0).toUpperCase()
-                      }
-                      return 'U'
-                    }
-                    return (
-                      <>
-                        <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-xs font-semibold text-slate-700">
-                          {getInitials()}
-                        </div>
-                        <div className="hidden sm:block">
-                          <div className="text-sm font-semibold">{displayName}</div>
-                          <div className="text-xs text-emerald-600">{displayRole}</div>
-                        </div>
-                      </>
-                    )
-                  })()}
-                </button>
-              </div>
-            </div>
-          </div>
+          <TopBar 
+            sidebarOpen={sidebarOpen} 
+            setSidebarOpen={setSidebarOpen}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
 
           {/* Content */}
           <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 py-6 sm:py-8">
@@ -420,7 +353,7 @@ const Products = () => {
             <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-5">
               <div className="flex items-center justify-between">
                 <h1 className="text-xl sm:text-[22px] md:text-[26px] font-extrabold tracking-tight text-[#003A70] shrink-0">
-                  Product Stock
+                  {t('products.title')}
                 </h1>
                 <button 
                   type="button"
@@ -430,7 +363,7 @@ const Products = () => {
                   <span className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0B4C8A] shadow-sm text-sm sm:text-base leading-none">
                     +
                   </span>
-                  <span className="whitespace-nowrap">Add New Product</span>
+                  <span className="whitespace-nowrap">{t('products.addNew')}</span>
                 </button>
               </div>
               <div className="flex items-center gap-3 sm:gap-4 md:justify-between">
@@ -440,7 +373,7 @@ const Products = () => {
                   </span>
                   <input
                     type="text"
-                    placeholder="Search product name"
+                    placeholder={t('products.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
@@ -454,25 +387,25 @@ const Products = () => {
                   <span className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0B4C8A] shadow-sm text-sm sm:text-base leading-none">
                     +
                   </span>
-                  <span className="whitespace-nowrap">Add New Product</span>
+                  <span className="whitespace-nowrap">{t('products.addNew')}</span>
                 </button>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border overflow-x-auto">
               <div className="grid grid-cols-[120px_minmax(0,2.1fr)_minmax(0,1.5fr)_minmax(0,1fr)_80px_140px_100px] min-w-[800px] px-4 sm:px-6 py-2 sm:py-3 border-b border-slate-100 bg-slate-50/60 text-[10px] sm:text-xs font-medium text-slate-500">
-                <div>Şəkil</div>
-                <div>Məhsulun adı</div>
-                <div>Kateqoriya</div>
-                <div>Qiymət</div>
-                <div className="text-center">Say</div>
-                <div className="text-center">Mövcud rənglər</div>
-                <div className="text-right pr-2">Action</div>
+                <div>{t('products.image')}</div>
+                <div>{t('products.productName')}</div>
+                <div>{t('products.category')}</div>
+                <div>{t('products.price')}</div>
+                <div className="text-center">{t('products.quantity')}</div>
+                <div className="text-center">{t('products.colors')}</div>
+                <div className="text-right pr-2">{t('products.action')}</div>
               </div>
 
               {loading ? (
                 <div className="px-4 sm:px-6 py-6 sm:py-8 text-center text-slate-500 text-sm sm:text-base">
-                  Yüklənir...
+                  {t('common.loading')}
                 </div>
               ) : error ? (
                 <div className="px-4 sm:px-6 py-6 sm:py-8 text-center text-red-500 text-sm sm:text-base">
@@ -480,7 +413,7 @@ const Products = () => {
                 </div>
               ) : filteredProducts.length === 0 ? (
                 <div className="px-4 sm:px-6 py-6 sm:py-8 text-center text-slate-500 text-sm sm:text-base">
-                  {searchQuery ? 'Axtarış nəticəsi tapılmadı' : 'Məhsul yoxdur. Yeni məhsul əlavə edin.'}
+                  {searchQuery ? t('products.noSearchResults') : t('products.noProducts')}
                 </div>
               ) : (
                 <div>
@@ -543,7 +476,7 @@ const Products = () => {
               {/* Pagination footer */}
               <div className="flex items-center justify-end gap-1.5 sm:gap-2 px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/60">
                 <button className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-slate-300 text-slate-500 hover:bg-slate-100">
-                  <span className="sr-only">Previous</span>
+                  <span className="sr-only">{t('common.previous')}</span>
                   <svg
                     className="w-2.5 h-2.5 sm:w-3 sm:h-3"
                     viewBox="0 0 24 24"
@@ -559,7 +492,7 @@ const Products = () => {
                   </svg>
                 </button>
                 <button className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-slate-300 text-slate-500 hover:bg-slate-100">
-                  <span className="sr-only">Next</span>
+                  <span className="sr-only">{t('common.next')}</span>
                   <svg
                     className="w-2.5 h-2.5 sm:w-3 sm:h-3"
                     viewBox="0 0 24 24"
@@ -613,7 +546,7 @@ const Products = () => {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-slate-800">
-                {isNewProduct ? 'Yeni Məhsul Əlavə Et' : 'Məhsulu Redaktə Et'}
+                {isNewProduct ? t('products.addNewProduct') : t('products.editProduct')}
               </h3>
               <button
                 type="button"
@@ -629,7 +562,7 @@ const Products = () => {
             <form onSubmit={handleSaveProduct} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Məhsulun adı
+                  {t('products.productNameLabel')}
                 </label>
                 <input
                   type="text"
@@ -642,7 +575,7 @@ const Products = () => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Kateqoriya
+                  {t('products.categoryLabel')}
                 </label>
                 <input
                   type="text"
@@ -656,7 +589,7 @@ const Products = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Qiymət
+                    {t('products.priceLabel')}
                   </label>
                   <input
                     type="number"
@@ -671,7 +604,7 @@ const Products = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Say
+                    {t('products.quantityLabel')}
                   </label>
                   <input
                     type="number"
@@ -686,7 +619,7 @@ const Products = () => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Mövcud rənglər (hex kodları, vergüllə ayrılmış)
+                  {t('products.colorsLabel')}
                 </label>
                 <input
                   type="text"
@@ -699,7 +632,7 @@ const Products = () => {
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#003A70] focus:border-transparent outline-none"
                 />
                 <p className="text-xs text-slate-500 mt-1">
-                  Nümunə: #111827, #9CA3AF, #F97373
+                  {t('products.colorsExample')}
                 </p>
               </div>
 
@@ -709,13 +642,13 @@ const Products = () => {
                   onClick={closeEditModal}
                   className="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium"
                 >
-                  Ləğv et
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-6 py-2 bg-[#003A70] text-white rounded-lg font-medium hover:bg-[#02498f] transition-colors"
                 >
-                  Yadda saxla
+                  {t('common.save')}
                 </button>
               </div>
             </form>
@@ -734,9 +667,9 @@ const Products = () => {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Məhsulu Sil</h3>
+                <h3 className="text-lg font-bold text-slate-800">{t('products.deleteProduct')}</h3>
                 <p className="text-sm text-slate-600 mt-1">
-                  Bu məhsulu silmək istədiyinizə əminsiniz?
+                  {t('products.deleteConfirm')}
                 </p>
               </div>
             </div>
@@ -754,14 +687,14 @@ const Products = () => {
                 onClick={closeDeleteConfirm}
                 className="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium"
               >
-                Ləğv et
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
                 onClick={confirmDelete}
                 className="px-6 py-2 bg-rose-500 text-white rounded-lg font-medium hover:bg-rose-600 transition-colors"
               >
-                Sil
+                {t('common.delete')}
               </button>
             </div>
           </div>

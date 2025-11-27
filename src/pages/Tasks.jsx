@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { authAPI, todoAPI } from '../services/api'
 import { Icon } from './Dashboard'
 import { clearUserData, getUserData } from '../utils/userStorage'
+import TopBar from '../components/TopBar'
 
 const Tasks = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useTranslation()
   const [notifOpen, setNotifOpen] = useState(false)
   const [tasks, setTasks] = useState([])
   const [allTasks, setAllTasks] = useState([]) // Store all tasks for filtering
@@ -21,6 +24,7 @@ const Tasks = () => {
   const [taskToDelete, setTaskToDelete] = useState(null)
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Format date for display (ISO to "17 Nov" format)
   const formatDateForDisplay = (isoDate) => {
@@ -421,7 +425,7 @@ const Tasks = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
@@ -431,19 +435,19 @@ const Tasks = () => {
       )}
       
       <div className="flex">
-        {/* Sidebar (Dashboard ilə eyni stil) */}
-        <aside className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 shrink-0 flex-col bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out ${
+        {/* Sidebar */}
+        <aside className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 shrink-0 flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } ${sidebarOpen ? 'flex' : 'hidden md:flex'}`}>
-          <div className="px-8 pt-8 pb-6 border-b border-slate-200 md:flex items-center justify-between">
-            <div className="text-2xl font-extrabold tracking-tight text-[#002750]">
+          <div className="px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700 md:flex items-center justify-between">
+            <div className="text-2xl font-extrabold tracking-tight text-[#002750] dark:text-white">
               BizEra
             </div>
             {/* Mobile Close Button */}
             <button
               type="button"
               onClick={() => setSidebarOpen(false)}
-              className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
               aria-label="Close menu"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -455,13 +459,13 @@ const Tasks = () => {
           <nav className="flex-1 flex flex-col text-[15px] font-semibold">
             <div className="flex-1 flex flex-col">
               {[
-                { label: 'Dashboard', path: '/dashboard', icon: Icon.sidebarDashboard },
-                { label: 'Məhsullar', path: '/products', icon: Icon.sidebarProducts },
-                { label: 'Satışlar', path: '/sales', icon: Icon.sidebarSales },
-                { label: 'Tapşırıqlar', path: '/tasks', icon: Icon.sidebarTasks },
-                { label: 'Müştərilər', path: '/customers', icon: Icon.sidebarCustomers },
-                { label: 'Xərclər', path: '/expenses', icon: Icon.sidebarExpenses },
-                { label: 'Tənzimləmələr', path: '/settings', icon: Icon.sidebarSettings }
+                { label: t('sidebar.dashboard'), path: '/dashboard', icon: Icon.sidebarDashboard },
+                { label: t('sidebar.products'), path: '/products', icon: Icon.sidebarProducts },
+                { label: t('sidebar.sales'), path: '/sales', icon: Icon.sidebarSales },
+                { label: t('sidebar.tasks'), path: '/tasks', icon: Icon.sidebarTasks },
+                { label: t('sidebar.customers'), path: '/customers', icon: Icon.sidebarCustomers },
+                { label: t('sidebar.expenses'), path: '/expenses', icon: Icon.sidebarExpenses },
+                { label: t('sidebar.settings'), path: '/settings', icon: Icon.sidebarSettings }
               ].map((item) => {
                 const isActive = location.pathname === item.path
                 const ItemIcon = item.icon
@@ -471,17 +475,17 @@ const Tasks = () => {
                     type="button"
                     onClick={() => {
                       navigate(item.path)
-                      setSidebarOpen(false) // Close sidebar on mobile after navigation
+                      setSidebarOpen(false)
                     }}
                     className={`w-full flex items-center px-8 py-5 border-b transition-colors ${
                       isActive
                         ? 'bg-[#003A70] text-white border-transparent'
-                        : 'bg-white text-[#003A70] border-[#E6EDF5] hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-[#003A70] dark:text-slate-200 border-[#E6EDF5] dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <ItemIcon
                       className={`mr-4 h-5 w-5 ${
-                        isActive ? 'text-white' : 'text-[#003A70]'
+                        isActive ? 'text-white' : 'text-[#003A70] dark:text-slate-200'
                       }`}
                     />
                     <span>{item.label}</span>
@@ -494,9 +498,9 @@ const Tasks = () => {
               <button
                 type="button"
                 onClick={logout}
-                className="w-full flex items-center justify-between rounded-xl bg-[#F3F7FB] px-5 py-3 text-[15px] font-semibold text-[#003A70] hover:bg-[#e7f0f9] transition-colors"
+                className="w-full flex items-center justify-between rounded-xl bg-[#F3F7FB] dark:bg-slate-700 px-5 py-3 text-[15px] font-semibold text-[#003A70] dark:text-white hover:bg-[#e7f0f9] dark:hover:bg-slate-600 transition-colors"
               >
-                <span>Çıxış</span>
+                <span>{t('common.logout')}</span>
                 <Icon.sidebarLogout className="h-5 w-5" />
               </button>
             </div>
@@ -506,122 +510,19 @@ const Tasks = () => {
         {/* Main */}
         <main className="flex-1 w-full md:w-auto">
           {/* Top bar */}
-          <div className="sticky top-0 z-10 bg-white border-b">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-              {/* Mobile Menu Button */}
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
-                aria-label="Open menu"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              
-              <div className="relative w-48 sm:w-72 md:w-96">
-                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                  <Icon.search className="w-4 h-4" />
-                </span>
-                <input
-                  placeholder="Axtar"
-                  className="w-full rounded-xl bg-slate-100 pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Icon.globe className="w-5 h-5 text-slate-600" />
-                <Icon.moon className="w-5 h-5 text-slate-600" />
-                <div className="relative">
-                  <button
-                    onClick={() => setNotifOpen((v) => !v)}
-                    className="relative p-2 rounded-lg hover:bg-slate-100"
-                  >
-                    <Icon.bell className="w-5 h-5 text-slate-600" />
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 rounded-full" />
-                  </button>
-                  {notifOpen && (
-                    <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border p-3">
-                      <div className="flex items-center justify-between text-sm text-slate-500 mb-2">
-                        <span>November 2025</span>
-                        <button className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700">
-                          Read All
-                        </button>
-                      </div>
-                      {[1, 2, 3, 4].map((i) => (
-                        <div
-                          // eslint-disable-next-line react/no-array-index-key
-                          key={i}
-                          className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50"
-                        >
-                          <div className="w-9 h-9 rounded-full bg-slate-200" />
-                          <div className="flex-1">
-                            <div className="text-slate-800 text-sm font-semibold leading-5">
-                              Meg Griffin left you a review. Both reviews are now public.
-                            </div>
-                            <div className="text-xs text-slate-500 mt-0.5">
-                              March 1, 2023
-                            </div>
-                          </div>
-                          <button className="text-rose-500 hover:text-rose-600">
-                            <Icon.trash className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/profile')}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                >
-                  {(() => {
-                    const userData = getUserData()
-                    const displayName = userData?.fullName || 
-                                     (userData?.name && userData?.surname 
-                                       ? `${userData.name} ${userData.surname}`.trim()
-                                       : userData?.name || 'User')
-                    const displayRole = userData?.role || 'Admin'
-                    const getInitials = () => {
-                      if (userData?.name && userData?.surname) {
-                        return `${userData.name.charAt(0)}${userData.surname.charAt(0)}`.toUpperCase()
-                      }
-                      if (userData?.name) {
-                        return userData.name.charAt(0).toUpperCase()
-                      }
-                      if (userData?.fullName) {
-                        const parts = userData.fullName.split(' ')
-                        if (parts.length >= 2) {
-                          return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase()
-                        }
-                        return userData.fullName.charAt(0).toUpperCase()
-                      }
-                      return 'U'
-                    }
-                    return (
-                      <>
-                        <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-xs font-semibold text-slate-700">
-                          {getInitials()}
-                        </div>
-                        <div className="hidden sm:block">
-                          <div className="text-sm font-semibold">{displayName}</div>
-                          <div className="text-xs text-emerald-600">{displayRole}</div>
-                        </div>
-                      </>
-                    )
-                  })()}
-                </button>
-              </div>
-            </div>
-          </div>
+          <TopBar 
+            sidebarOpen={sidebarOpen} 
+            setSidebarOpen={setSidebarOpen}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
 
           {/* Content */}
           <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 py-6 sm:py-8">
             {/* Page title + main action */}
             <div className="flex items-center justify-between mb-4 sm:mb-6">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#003A70]">
-                To-Do List
+                {t('tasks.title')}
               </h1>
               <button 
                 onClick={openAddTaskModal}
@@ -631,13 +532,13 @@ const Tasks = () => {
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-base leading-none">
                   +
                 </span>
-                <span>Add New Task</span>
+                <span>{t('tasks.addNew')}</span>
               </button>
             </div>
 
             {/* Calendar title */}
             <h2 className="text-lg font-semibold text-slate-800 mb-4 sm:mb-5">
-              Calendar
+              {t('tasks.calendar')}
             </h2>
 
             {/* Calendar + small month card */}
@@ -689,7 +590,7 @@ const Tasks = () => {
                     </button>
                   </div>
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs sm:text-sm text-slate-700 shadow-sm">
-                    Last 2 weeks
+                    {t('tasks.last2Weeks')}
                     <svg
                       className="w-3 h-3"
                       viewBox="0 0 24 24"
@@ -921,7 +822,7 @@ const Tasks = () => {
                     onClick={() => setSelectedDate(null)}
                     className="mt-3 text-xs text-[#003A70] hover:underline"
                   >
-                    Bütün tapşırıqları göstər
+                    {t('tasks.showAllTasks')}
                   </button>
                 )}
               </div>
@@ -937,15 +838,15 @@ const Tasks = () => {
             {/* Tasks List */}
             <section className="mt-8 bg-white rounded-2xl shadow-sm border">
               <div className="px-6 py-5 border-b border-slate-100">
-                <h2 className="text-xl font-semibold text-slate-800">Tasks List</h2>
+                <h2 className="text-xl font-semibold text-slate-800">{t('tasks.tasksList')}</h2>
               </div>
               {loading ? (
                 <div className="px-6 py-8 text-center text-slate-500">
-                  Yüklənir...
+                  {t('tasks.loading')}
                 </div>
               ) : tasks.length === 0 ? (
                 <div className="px-6 py-8 text-center text-slate-500">
-                  Tapşırıq yoxdur. Yeni tapşırıq əlavə edin.
+                  {t('tasks.noTasks')}
                 </div>
               ) : (
                 <div className="divide-y">

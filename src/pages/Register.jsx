@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import bizeraLogo from '../assets/bizera.png'
 import bizeraLogoMobile from '../assets/bizera2.png'
 import { authAPI } from '../services/api'
@@ -7,6 +8,7 @@ import { saveUserData } from '../utils/userStorage'
 // import FeatureCard from '../components/FeatureCard'
 
 const Register = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     name: '',
@@ -22,8 +24,8 @@ const Register = () => {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  const businessCategories = [
-    'Seçim edin',
+  const businessCategories = useMemo(() => [
+    t('auth.selectCategory'),
     'Retail',
     'E-commerce',
     'SaaS',
@@ -31,7 +33,7 @@ const Register = () => {
     'Healthcare',
     'Education',
     'Other'
-  ]
+  ], [t])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -51,8 +53,8 @@ const Register = () => {
 
     try {
       // Validate business category
-      if (!formData.businessCategory || formData.businessCategory === 'Seçim edin') {
-        throw new Error('Zəhmət olmasa biznes kateqoriyasını seçin')
+      if (!formData.businessCategory || formData.businessCategory === t('auth.selectCategory')) {
+        throw new Error(t('auth.registerError'))
       }
 
       const response = await authAPI.register({
@@ -78,7 +80,7 @@ const Register = () => {
           birthDate: formData.birthDate,
           businessName: formData.businessName.trim(),
           businessCategory: formData.businessCategory,
-          role: 'Admin', // Default role
+          role: t('common.admin'), // Default role
           userId: userId
         })
 
@@ -100,10 +102,10 @@ const Register = () => {
           navigate(`/login?registered=true&email=${email}`, { replace: true })
         }
       } else {
-        throw new Error('Qeydiyyat uğursuz oldu. Zəhmət olmasa yenidən cəhd edin.')
+        throw new Error(t('auth.registerError'))
       }
     } catch (err) {
-      setError(err.message || 'Qeydiyyat zamanı xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.')
+      setError(err.message || t('auth.registerError'))
     } finally {
       setIsLoading(false)
     }
@@ -169,13 +171,13 @@ const Register = () => {
               to="/login"
               className="flex-1 bg-gray-100 text-gray-600 text-center py-2.5 sm:py-3 px-3 sm:px-4 rounded-2xl font-semibold text-sm sm:text-base transition-colors hover:bg-gray-200"
             >
-              Login
+              {t('auth.login')}
             </Link>
             <Link
               to="/register"
               className="flex-1 gradient-primary text-white text-center py-2.5 sm:py-3 px-3 sm:px-4 rounded-2xl font-semibold text-sm sm:text-base transition-opacity hover:opacity-90 shadow-md"
             >
-              Register
+              {t('auth.register')}
             </Link>
           </div>
 
@@ -193,7 +195,7 @@ const Register = () => {
               {/* Name Field */}
               <div>
                 <label htmlFor="name" className="block text-gray-900 text-xs sm:text-sm font-bold mb-1.5">
-                  Name
+                  {t('auth.name')}
                 </label>
                 <input
                   type="text"
@@ -201,7 +203,7 @@ const Register = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Adınızı daxil edin"
+                  placeholder={t('auth.name')}
                   className="w-full px-3 sm:px-3.5 py-2 sm:py-2.5 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm transition-all placeholder:text-gray-400"
                   required
                 />
@@ -210,7 +212,7 @@ const Register = () => {
               {/* Surname Field */}
               <div>
                 <label htmlFor="surname" className="block text-gray-900 text-xs sm:text-sm font-bold mb-1.5">
-                  Soyad
+                  {t('auth.surname')}
                 </label>
                 <input
                   type="text"
@@ -218,7 +220,7 @@ const Register = () => {
                   name="surname"
                   value={formData.surname}
                   onChange={handleChange}
-                  placeholder="Soyadınız"
+                  placeholder={t('auth.surname')}
                   className="w-full px-3 sm:px-3.5 py-2 sm:py-2.5 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm transition-all placeholder:text-gray-400"
                   required
                 />
@@ -228,7 +230,7 @@ const Register = () => {
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-gray-900 text-xs sm:text-sm font-bold mb-1.5">
-                E-mail
+                {t('auth.emailAddress')}
               </label>
               <input
                 type="email"
@@ -245,7 +247,7 @@ const Register = () => {
             {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-gray-900 text-xs sm:text-sm font-bold mb-1.5">
-                Şifrə
+                {t('auth.password')}
               </label>
               <div className="relative">
                 <input
@@ -286,7 +288,7 @@ const Register = () => {
               {/* Business Category Field */}
               <div>
                 <label htmlFor="businessCategory" className="block text-gray-900 text-xs sm:text-sm font-bold mb-1.5">
-                  Biznes kateqoriyası
+                  {t('auth.businessCategory')}
                 </label>
                 <div className="relative">
                   <select
@@ -298,7 +300,7 @@ const Register = () => {
                     required
                   >
                     {businessCategories.map((category, index) => (
-                      <option key={index} value={category === 'Seçim edin' ? '' : category}>
+                      <option key={index} value={category === t('auth.selectCategory') ? '' : category}>
                         {category}
                       </option>
                     ))}
@@ -314,7 +316,7 @@ const Register = () => {
               {/* Business Name Field */}
               <div>
                 <label htmlFor="businessName" className="block text-gray-900 text-xs sm:text-sm font-bold mb-1.5">
-                  Biznes adı
+                  {t('auth.businessName')}
                 </label>
                 <input
                   type="text"
@@ -334,7 +336,7 @@ const Register = () => {
               {/* Birth Date Field */}
               <div>
                 <label htmlFor="birthDate" className="block text-gray-900 text-xs sm:text-sm font-bold mb-1.5">
-                  Doğum tarixi
+                  {t('auth.birthDate')}
                 </label>
                 <input
                   type="date"
@@ -350,7 +352,7 @@ const Register = () => {
               {/* Phone Number Field */}
               <div>
                 <label htmlFor="phoneNumber" className="block text-gray-900 text-xs sm:text-sm font-bold mb-1.5">
-                  Əlaqə nömrəsi
+                  {t('auth.phoneNumber')}
                 </label>
                 <input
                   type="tel"
@@ -371,7 +373,7 @@ const Register = () => {
               disabled={isLoading}
               className="w-full gradient-primary text-white py-3 sm:py-3.5 rounded-lg font-bold text-sm sm:text-base transition-opacity hover:opacity-90 shadow-lg mt-5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Yüklənir...' : 'Hesab yarat'}
+              {isLoading ? t('common.loading') : t('auth.createAccount')}
             </button>
 
             {/* Login Link */}
@@ -379,7 +381,7 @@ const Register = () => {
               to="/login"
               className="block w-full bg-white border-2 border-gray-300 text-gray-700 py-3 sm:py-3.5 rounded-lg font-bold text-sm sm:text-base text-center transition-colors hover:bg-gray-50 mt-3"
             >
-              Artıq hesabın var? Daxil ol
+              {t('auth.alreadyHaveAccount')}
             </Link>
           </form>
         </div>

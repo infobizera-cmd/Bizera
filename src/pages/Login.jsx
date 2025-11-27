@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import bizeraLogo from '../assets/bizera.png'
 import bizeraLogoMobile from '../assets/bizera2.png'
 import { authAPI } from '../services/api'
@@ -7,6 +8,7 @@ import { saveUserData, getUserData } from '../utils/userStorage'
 // import FeatureCard from '../components/FeatureCard'
 
 const Login = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [formData, setFormData] = useState({
@@ -25,7 +27,7 @@ const Login = () => {
     const email = searchParams.get('email')
     
     if (registered === 'true' && email) {
-      setSuccessMessage('Qeydiyyat uğurla tamamlandı! İndi daxil ola bilərsiniz.')
+      setSuccessMessage(t('auth.registerSuccess'))
       setFormData(prev => ({
         ...prev,
         email: decodeURIComponent(email)
@@ -33,7 +35,7 @@ const Login = () => {
       // Clear query params from URL without navigation
       window.history.replaceState({}, '', '/login')
     }
-  }, [searchParams])
+  }, [searchParams, t])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -128,13 +130,13 @@ const Login = () => {
         // Navigate to dashboard on success
         navigate('/dashboard', { replace: true })
       } else {
-        throw new Error('Daxil olma uğursuz oldu. Zəhmət olmasa yenidən cəhd edin.')
+        throw new Error(t('auth.loginError'))
       }
     } catch (err) {
       console.error('Login error:', err)
       
       // Handle different error formats
-      let errorMsg = 'Daxil olma uğursuz oldu. Zəhmət olmasa email və şifrəni yoxlayın.'
+      let errorMsg = t('auth.loginError')
       
       if (err.message) {
         errorMsg = err.message
@@ -148,11 +150,11 @@ const Login = () => {
       
       // Handle specific error cases
       if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
-        errorMsg = 'Email və ya şifrə yanlışdır. Zəhmət olmasa yenidən cəhd edin.'
+        errorMsg = t('auth.loginError')
       } else if (errorMsg.includes('404') || errorMsg.includes('Not Found')) {
-        errorMsg = 'İstifadəçi tapılmadı. Zəhmət olmasa email ünvanınızı yoxlayın.'
+        errorMsg = t('auth.loginError')
       } else if (errorMsg.includes('400') || errorMsg.includes('Bad Request')) {
-        errorMsg = 'Email və ya şifrə düzgün deyil. Zəhmət olmasa yenidən cəhd edin.'
+        errorMsg = t('auth.loginError')
       }
       
       setError(errorMsg)
@@ -221,13 +223,13 @@ const Login = () => {
               to="/login"
               className="flex-1 gradient-primary text-white text-center py-3 sm:py-3.5 px-4 rounded-2xl font-semibold text-base sm:text-lg transition-opacity hover:opacity-90 shadow-md"
             >
-              Login
+              {t('auth.login')}
             </Link>
             <Link
               to="/register"
               className="flex-1 bg-gray-100 text-gray-600 text-center py-3 sm:py-3.5 px-4 rounded-2xl font-semibold text-base sm:text-lg transition-colors hover:bg-gray-200"
             >
-              Register
+              {t('auth.register')}
             </Link>
           </div>
 
@@ -254,7 +256,7 @@ const Login = () => {
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-gray-900 text-sm sm:text-base font-bold mb-2.5">
-                E-mail
+                {t('auth.emailAddress')}
               </label>
               <input
                 type="email"
@@ -272,7 +274,7 @@ const Login = () => {
             {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-gray-900 text-sm sm:text-base font-bold mb-2.5">
-                Şifrə
+                {t('auth.password')}
               </label>
               <div className="relative">
                 <input
@@ -318,13 +320,13 @@ const Login = () => {
                   onChange={handleChange}
                   className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 />
-                <span className="ml-2.5 text-gray-800 text-sm sm:text-base font-medium group-hover:text-gray-900">Məni yadda saxla</span>
+                <span className="ml-2.5 text-gray-800 text-sm sm:text-base font-medium group-hover:text-gray-900">{t('auth.rememberMe')}</span>
               </label>
               <Link
                 to="#"
                 className="text-blue-600 hover:text-blue-700 text-sm sm:text-base font-bold transition-colors"
               >
-                Şifrəni unutdun?
+                {t('auth.forgotPassword')}
               </Link>
             </div>
 
@@ -334,7 +336,7 @@ const Login = () => {
               disabled={isLoading}
               className="w-full gradient-primary text-white py-4 sm:py-4.5 md:py-5 rounded-lg font-bold text-base sm:text-lg md:text-xl transition-opacity hover:opacity-90 shadow-xl mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Yüklənir...' : 'Daxil ol'}
+              {isLoading ? t('common.loading') : t('auth.login')}
             </button>
 
             {/* Create Account Button */}
@@ -342,7 +344,7 @@ const Login = () => {
               to="/register"
               className="block w-full bg-white border-2 border-gray-300 text-gray-700 py-4 sm:py-4.5 md:py-5 rounded-lg font-bold text-base sm:text-lg md:text-xl text-center transition-colors hover:bg-gray-50 mt-3"
             >
-              Yeni hesab yarat
+              {t('auth.register')}
             </Link>
           </form>
         </div>

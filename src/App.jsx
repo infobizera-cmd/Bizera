@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
@@ -8,6 +8,7 @@ import Customers from './pages/Customers'
 import Sales from './pages/Sales'
 import Expenses from './pages/Expenses'
 import Profile from './pages/Profile'
+import Settings from './pages/Settings'
 
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('bizera_auth') === 'true'
@@ -75,6 +76,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

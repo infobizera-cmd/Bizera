@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { authAPI } from '../services/api'
 import { Icon } from './Dashboard'
 import { getUserData, updateUserData, clearUserData } from '../utils/userStorage'
+import TopBar from '../components/TopBar'
 
 const Profile = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useTranslation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('edit')
+  const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     surname: '',
@@ -131,15 +135,15 @@ const Profile = () => {
           ? `${formData.name} ${formData.surname}`.trim()
           : formData.name || ''
       })
-      alert('Profil məlumatları uğurla yeniləndi!')
+      alert(t('profile.profileUpdated'))
     } else if (activeTab === 'preferences') {
       // Save preferences
       localStorage.setItem('bizera_preferences', JSON.stringify(preferences))
-      alert('Preferences uğurla yeniləndi!')
+      alert(t('profile.preferencesUpdated'))
     } else if (activeTab === 'security') {
       // Save security settings
       localStorage.setItem('bizera_security', JSON.stringify(security))
-      alert('Security məlumatları uğurla yeniləndi!')
+      alert(t('profile.securityUpdated'))
     }
   }
 
@@ -164,7 +168,7 @@ const Profile = () => {
   )
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
@@ -175,16 +179,16 @@ const Profile = () => {
       
       <div className="flex">
         {/* Sidebar */}
-        <aside className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 shrink-0 flex-col bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out ${
+        <aside className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 shrink-0 flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } ${sidebarOpen ? 'flex' : 'hidden md:flex'}`}>
-          <div className="px-8 pt-8 pb-6 border-b border-slate-200 md:flex items-center justify-between">
-            <div className="text-2xl font-extrabold tracking-tight text-[#002750]">BizEra</div>
+          <div className="px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700 md:flex items-center justify-between">
+            <div className="text-2xl font-extrabold tracking-tight text-[#002750] dark:text-white">BizEra</div>
             {/* Mobile Close Button */}
             <button
               type="button"
               onClick={() => setSidebarOpen(false)}
-              className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
               aria-label="Close menu"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,13 +200,13 @@ const Profile = () => {
           <nav className="flex-1 flex flex-col text-[15px] font-semibold">
             <div className="flex-1 flex flex-col">
               {[
-                { label: 'Dashboard', path: '/dashboard', icon: Icon.sidebarDashboard },
-                { label: 'Məhsullar', path: '/products', icon: Icon.sidebarProducts },
-                { label: 'Satışlar', path: '/sales', icon: Icon.sidebarSales },
-                { label: 'Tapşırıqlar', path: '/tasks', icon: Icon.sidebarTasks },
-                { label: 'Müştərilər', path: '/customers', icon: Icon.sidebarCustomers },
-                { label: 'Xərclər', path: '/expenses', icon: Icon.sidebarExpenses },
-                { label: 'Tənzimləmələr', path: '/settings', icon: Icon.sidebarSettings }
+                { label: t('sidebar.dashboard'), path: '/dashboard', icon: Icon.sidebarDashboard },
+                { label: t('sidebar.products'), path: '/products', icon: Icon.sidebarProducts },
+                { label: t('sidebar.sales'), path: '/sales', icon: Icon.sidebarSales },
+                { label: t('sidebar.tasks'), path: '/tasks', icon: Icon.sidebarTasks },
+                { label: t('sidebar.customers'), path: '/customers', icon: Icon.sidebarCustomers },
+                { label: t('sidebar.expenses'), path: '/expenses', icon: Icon.sidebarExpenses },
+                { label: t('sidebar.settings'), path: '/settings', icon: Icon.sidebarSettings }
               ].map((item) => {
                 const isActive = location.pathname === item.path
                 const ItemIcon = item.icon
@@ -212,17 +216,17 @@ const Profile = () => {
                     type="button"
                     onClick={() => {
                       navigate(item.path)
-                      setSidebarOpen(false) // Close sidebar on mobile after navigation
+                      setSidebarOpen(false)
                     }}
                     className={`w-full flex items-center px-8 py-5 border-b transition-colors ${
                       isActive
                         ? 'bg-[#003A70] text-white border-transparent'
-                        : 'bg-white text-[#003A70] border-[#E6EDF5] hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-[#003A70] dark:text-slate-200 border-[#E6EDF5] dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <ItemIcon
                       className={`mr-4 h-5 w-5 ${
-                        isActive ? 'text-white' : 'text-[#003A70]'
+                        isActive ? 'text-white' : 'text-[#003A70] dark:text-slate-200'
                       }`}
                     />
                     <span>{item.label}</span>
@@ -235,9 +239,9 @@ const Profile = () => {
               <button
                 type="button"
                 onClick={logout}
-                className="w-full flex items-center justify-between rounded-xl bg-[#F3F7FB] px-5 py-3 text-[15px] font-semibold text-[#003A70] hover:bg-[#e7f0f9] transition-colors"
+                className="w-full flex items-center justify-between rounded-xl bg-[#F3F7FB] dark:bg-slate-700 px-5 py-3 text-[15px] font-semibold text-[#003A70] dark:text-white hover:bg-[#e7f0f9] dark:hover:bg-slate-600 transition-colors"
               >
-                <span>Çıxış</span>
+                <span>{t('common.logout')}</span>
                 <Icon.sidebarLogout className="h-5 w-5" />
               </button>
             </div>
@@ -247,92 +251,23 @@ const Profile = () => {
         {/* Main */}
         <main className="flex-1 w-full md:w-auto">
           {/* Top bar */}
-          <div className="sticky top-0 z-10 bg-white border-b">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-              {/* Mobile Menu Button */}
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
-                aria-label="Open menu"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              
-              <div className="relative w-48 sm:w-72 md:w-96">
-                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                  <Icon.search className="w-4 h-4" />
-                </span>
-                <input
-                  placeholder="Axtar"
-                  className="w-full rounded-xl bg-slate-100 pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Icon.globe className="w-5 h-5 text-slate-600" />
-                <Icon.moon className="w-5 h-5 text-slate-600" />
-                <div className="relative">
-                  <button className="relative p-2 rounded-lg hover:bg-slate-100">
-                    <Icon.bell className="w-5 h-5 text-slate-600" />
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 rounded-full" />
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className="flex items-center gap-2"
-                >
-                  {(() => {
-                    const userData = getUserData()
-                    const displayName = userData?.fullName || 
-                                     (userData?.name && userData?.surname 
-                                       ? `${userData.name} ${userData.surname}`.trim()
-                                       : userData?.name || 'User')
-                    const displayRole = userData?.role || 'Admin'
-                    const getInitials = () => {
-                      if (userData?.name && userData?.surname) {
-                        return `${userData.name.charAt(0)}${userData.surname.charAt(0)}`.toUpperCase()
-                      }
-                      if (userData?.name) {
-                        return userData.name.charAt(0).toUpperCase()
-                      }
-                      if (userData?.fullName) {
-                        const parts = userData.fullName.split(' ')
-                        if (parts.length >= 2) {
-                          return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase()
-                        }
-                        return userData.fullName.charAt(0).toUpperCase()
-                      }
-                      return 'U'
-                    }
-                    return (
-                      <>
-                        <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-xs font-semibold text-slate-700">
-                          {getInitials()}
-                        </div>
-                        <div className="hidden sm:block">
-                          <div className="text-sm font-semibold">{displayName}</div>
-                          <div className="text-xs text-emerald-600">{displayRole}</div>
-                        </div>
-                      </>
-                    )
-                  })()}
-                </button>
-              </div>
-            </div>
-          </div>
+          <TopBar 
+            sidebarOpen={sidebarOpen} 
+            setSidebarOpen={setSidebarOpen}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
 
           {/* Content */}
           <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 py-6 sm:py-8">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#003A70] mb-6">PROFILE</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#003A70] mb-6">{t('profile.title')}</h1>
 
             {/* Tabs */}
             <div className="flex items-center gap-6 mb-8 border-b border-slate-200">
               {[
-                { id: 'edit', label: 'Edit Profile' },
-                { id: 'preferences', label: 'Preferences' },
-                { id: 'security', label: 'Security' }
+                { id: 'edit', label: t('profile.editProfile') },
+                { id: 'preferences', label: t('profile.preferences') },
+                { id: 'security', label: t('profile.security') }
               ].map((tab) => (
                 <button
                   key={tab.id}

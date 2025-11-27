@@ -70,5 +70,15 @@ export const contactsAPI = {
       method: 'DELETE',
     })
   },
+
+  /**
+   * Get contacts statistics
+   * @returns {Promise<Object>} Response data with totalContacts
+   */
+  getStats: async () => {
+    return apiRequest('/Contacts/stats', {
+      method: 'GET',
+    })
+  },
 }
 

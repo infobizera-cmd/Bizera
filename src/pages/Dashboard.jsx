@@ -1,152 +1,71 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { authAPI, dashboardAPI } from '../services/api'
-import { clearUserData, getUserData } from '../utils/userStorage'
+import { useTranslation } from 'react-i18next'
+import { authAPI, dashboardAPI, contactsAPI } from '../services/api'
+import { clearUserData } from '../utils/userStorage'
+import TopBar from '../components/TopBar'
 
 export const Icon = {
+  // Professional Dashboard Icon - Layout Grid
   sidebarDashboard: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
-      <circle cx="12" cy="12" r="9" strokeWidth="1.8" />
-      <path
-        d="M12 7v4.2L14.5 13"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
     </svg>
   ),
+  // Professional Products Icon - Package/Box
   sidebarProducts: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
-      <path
-        d="M12 2.5L4 6.5v11l8 4 8-4v-11L12 2.5z"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M4 6.5l8 4 8-4M12 10.5v11"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
     </svg>
   ),
+  // Professional Sales Icon - Trending Up Chart
   sidebarSales: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
-      <path
-        d="M4 19.5h16"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <path
-        d="M6 15.5l3.5-4 3 3 5.5-7"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="6" cy="15.5" r="1" fill="currentColor" />
-      <circle cx="9.5" cy="11.5" r="1" fill="currentColor" />
-      <circle cx="12.5" cy="14.5" r="1" fill="currentColor" />
-      <circle cx="18" cy="7.5" r="1" fill="currentColor" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+      <polyline points="17 6 23 6 23 12" />
     </svg>
   ),
+  // Professional Tasks Icon - Clipboard with Check
   sidebarTasks: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
-      <rect
-        x="6"
-        y="4"
-        width="12"
-        height="16"
-        rx="2"
-        strokeWidth="1.6"
-      />
-      <path
-        d="M9 3.5h6"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <path
-        d="M9 9.5h6M9 13.5h4"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <path
-        d="M8 9.5l1 1.2 2-2.7"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M9 11l3 3L22 4" />
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
     </svg>
   ),
+  // Professional Customers Icon - Users/People
   sidebarCustomers: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
-      <circle cx="9" cy="9" r="3" strokeWidth="1.6" />
-      <path
-        d="M4.5 18.5C5.3 16 7 14.5 9 14.5s3.7 1.5 4.5 4"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <circle cx="17" cy="9" r="2.5" strokeWidth="1.6" />
-      <path
-        d="M14.5 17c.7-1.8 2-2.9 3.5-2.9 1.2 0 2.3.6 3 1.9"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   ),
+  // Professional Expenses Icon - Dollar Sign/Wallet
   sidebarExpenses: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
-      <rect
-        x="3"
-        y="6"
-        width="18"
-        height="12"
-        rx="2.5"
-        strokeWidth="1.6"
-      />
-      <path
-        d="M3 10h18"
-        strokeWidth="1.6"
-      />
-      <rect
-        x="6.5"
-        y="12.5"
-        width="4"
-        height="3"
-        rx="1"
-        strokeWidth="1.4"
-      />
-      <circle cx="17" cy="13.5" r="1" fill="currentColor" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="12" y1="1" x2="12" y2="23" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </svg>
   ),
+  // Professional Settings Icon - Gear/Cog with detailed design
   sidebarSettings: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
-      <circle cx="12" cy="12" r="3.2" strokeWidth="1.6" />
-      <path
-        d="M19.4 13.5l1-1.7-1-1.8-2 .1a4.7 4.7 0 00-.7-1.2l1.1-1.7-1.4-1.4-1.7 1.1a4.7 4.7 0 00-1.2-.7l-.1-2h-2l-.1 2a4.7 4.7 0 00-1.2.7L7 5.8 5.6 7.2l1.1 1.7a4.7 4.7 0 00-.7 1.2l-2-.1-1 1.8 1 1.7 2-.1a4.7 4.7 0 00.7 1.2L5.6 18l1.4 1.4 1.7-1.1a4.7 4.7 0 001.2.7l.1 2h2l.1-2a4.7 4.7 0 001.2-.7l1.7 1.1 1.4-1.4-1.1-1.7a4.7 4.7 0 00.7-1.2z"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
     </svg>
   ),
+  // Professional Logout Icon - Sign Out
   sidebarLogout: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
-      <path
-        d="M10 5H6.8A2.8 2.8 0 004 7.8v8.4A2.8 2.8 0 006.8 19H10"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <path
-        d="M14 8l3 4-3 4"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M11.5 12H17"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   ),
   globe: (props) => (
@@ -246,25 +165,25 @@ export const Icon = {
 
 const StatCard = ({ title, value, trend, trendType = 'up', icon, tone = 'indigo' }) => {
   const toneClasses = {
-    indigo: 'bg-indigo-100 text-indigo-600',
-    amber: 'bg-amber-100 text-amber-500',
-    emerald: 'bg-emerald-100 text-emerald-500',
-    rose: 'bg-rose-100 text-rose-500'
+    indigo: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400',
+    amber: 'bg-amber-100 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400',
+    emerald: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400',
+    rose: 'bg-rose-100 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400'
   }[tone]
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 flex items-center gap-3 sm:gap-4">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-5 md:p-6 flex items-center gap-3 sm:gap-4">
       <div
         className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center ${toneClasses}`}
       >
         {icon}
       </div>
       <div className="min-w-0">
-        <div className="text-sm text-slate-500">{title}</div>
-        <div className="text-2xl sm:text-3xl font-extrabold text-slate-800">{value}</div>
+        <div className="text-sm text-slate-500 dark:text-slate-400">{title}</div>
+        <div className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white">{value}</div>
         <div
           className={`text-xs sm:text-sm mt-1 ${
-            trendType === 'down' ? 'text-rose-500' : 'text-emerald-600'
+            trendType === 'down' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
           }`}
         >
           {trend}
@@ -593,7 +512,7 @@ const DailyTrafficChart = ({ data, labels }) => {
 const Dashboard = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [notifOpen, setNotifOpen] = useState(false)
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   
@@ -602,6 +521,7 @@ const Dashboard = () => {
   const [salesSeries, setSalesSeries] = useState(null)
   const [accounts, setAccounts] = useState([])
   const [transactions, setTransactions] = useState([])
+  const [contactsStats, setContactsStats] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Load dashboard data
@@ -622,7 +542,7 @@ const Dashboard = () => {
         // Cookie-based auth - token is automatically sent in cookie
 
         // Load all data in parallel
-        const [metricsResponse, salesResponse, accountsResponse, allAccountsResponse] = await Promise.allSettled([
+        const [metricsResponse, salesResponse, accountsResponse, allAccountsResponse, contactsStatsResponse] = await Promise.allSettled([
           dashboardAPI.getMetrics(),
           (async () => {
             const now = new Date()
@@ -631,7 +551,8 @@ const Dashboard = () => {
             return dashboardAPI.getSalesSeries({ from, to, userOnly: false })
           })(),
           dashboardAPI.getAccounts(),
-          dashboardAPI.getAllAccounts()
+          dashboardAPI.getAllAccounts(),
+          contactsAPI.getStats()
         ])
 
         // Handle metrics
@@ -663,34 +584,59 @@ const Dashboard = () => {
         // Handle all accounts (transactions)
         if (allAccountsResponse.status === 'fulfilled' && allAccountsResponse.value?.data) {
           const transformedTransactions = Array.isArray(allAccountsResponse.value.data) 
-            ? allAccountsResponse.value.data.map((acc, idx) => ({
-                dir: idx % 2 === 0 ? 'up' : 'down',
-                desc: acc.accountName || acc.name || 'Transaction',
-                id: `#${acc.id?.toString().slice(-8) || idx}`,
-                type: acc.subscription || 'Transfer',
-                card: '1234 ****',
-                date: acc.date || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
-                amount: acc.amount || (idx % 2 === 0 ? -1000 : 500)
-              }))
+            ? allAccountsResponse.value.data.map((acc, idx) => {
+                // Translate transaction type
+                let translatedType = t('dashboard.transactionTypes.transfer')
+                if (acc.subscription) {
+                  const typeLower = acc.subscription.toLowerCase()
+                  if (typeLower.includes('shopping') || typeLower.includes('shop')) {
+                    translatedType = t('dashboard.transactionTypes.shopping')
+                  } else if (typeLower.includes('service')) {
+                    translatedType = t('dashboard.transactionTypes.service')
+                  } else {
+                    translatedType = t('dashboard.transactionTypes.transfer')
+                  }
+                }
+                return {
+                  dir: idx % 2 === 0 ? 'up' : 'down',
+                  desc: acc.accountName || acc.name || t('dashboard.defaultTransactions.spotifySubscription'),
+                  id: `#${acc.id?.toString().slice(-8) || idx}`,
+                  type: translatedType,
+                  card: '1234 ****',
+                  date: acc.date || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+                  amount: acc.amount || (idx % 2 === 0 ? -1000 : 500)
+                }
+              })
             : []
           setTransactions(transformedTransactions.length > 0 ? transformedTransactions : [
-            { dir: 'up', desc: 'Spotify Subscription', id: '#12548796', type: 'Shopping', card: '1234 ****', date: '28 Jan, 12.30 AM', amount: -2500 },
-            { dir: 'down', desc: 'Freepik Sales', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '25 Jan, 10.40 PM', amount: 750 },
-            { dir: 'up', desc: 'Mobile Service', id: '#12548796', type: 'Service', card: '1234 ****', date: '20 Jan, 10.40 PM', amount: -150 },
-            { dir: 'up', desc: 'Wilson', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '15 Jan, 03.29 PM', amount: -1050 },
-            { dir: 'down', desc: 'Emilly', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '14 Jan, 10.40 PM', amount: 840 }
+            { dir: 'up', desc: t('dashboard.defaultTransactions.spotifySubscription'), id: '#12548796', type: t('dashboard.transactionTypes.shopping'), card: '1234 ****', date: '28 Jan, 12.30 AM', amount: -2500 },
+            { dir: 'down', desc: t('dashboard.defaultTransactions.freepikSales'), id: '#12548796', type: t('dashboard.transactionTypes.transfer'), card: '1234 ****', date: '25 Jan, 10.40 PM', amount: 750 },
+            { dir: 'up', desc: t('dashboard.defaultTransactions.mobileService'), id: '#12548796', type: t('dashboard.transactionTypes.service'), card: '1234 ****', date: '20 Jan, 10.40 PM', amount: -150 },
+            { dir: 'up', desc: t('dashboard.defaultTransactions.wilson'), id: '#12548796', type: t('dashboard.transactionTypes.transfer'), card: '1234 ****', date: '15 Jan, 03.29 PM', amount: -1050 },
+            { dir: 'down', desc: t('dashboard.defaultTransactions.emilly'), id: '#12548796', type: t('dashboard.transactionTypes.transfer'), card: '1234 ****', date: '14 Jan, 10.40 PM', amount: 840 }
           ])
         } else if (allAccountsResponse.status === 'rejected') {
           const error = allAccountsResponse.reason
           console.error('Error loading all accounts:', error)
           // Set default transactions on error
           setTransactions([
-            { dir: 'up', desc: 'Spotify Subscription', id: '#12548796', type: 'Shopping', card: '1234 ****', date: '28 Jan, 12.30 AM', amount: -2500 },
-            { dir: 'down', desc: 'Freepik Sales', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '25 Jan, 10.40 PM', amount: 750 },
-            { dir: 'up', desc: 'Mobile Service', id: '#12548796', type: 'Service', card: '1234 ****', date: '20 Jan, 10.40 PM', amount: -150 },
-            { dir: 'up', desc: 'Wilson', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '15 Jan, 03.29 PM', amount: -1050 },
-            { dir: 'down', desc: 'Emilly', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '14 Jan, 10.40 PM', amount: 840 }
+            { dir: 'up', desc: t('dashboard.defaultTransactions.spotifySubscription'), id: '#12548796', type: t('dashboard.transactionTypes.shopping'), card: '1234 ****', date: '28 Jan, 12.30 AM', amount: -2500 },
+            { dir: 'down', desc: t('dashboard.defaultTransactions.freepikSales'), id: '#12548796', type: t('dashboard.transactionTypes.transfer'), card: '1234 ****', date: '25 Jan, 10.40 PM', amount: 750 },
+            { dir: 'up', desc: t('dashboard.defaultTransactions.mobileService'), id: '#12548796', type: t('dashboard.transactionTypes.service'), card: '1234 ****', date: '20 Jan, 10.40 PM', amount: -150 },
+            { dir: 'up', desc: t('dashboard.defaultTransactions.wilson'), id: '#12548796', type: t('dashboard.transactionTypes.transfer'), card: '1234 ****', date: '15 Jan, 03.29 PM', amount: -1050 },
+            { dir: 'down', desc: t('dashboard.defaultTransactions.emilly'), id: '#12548796', type: t('dashboard.transactionTypes.transfer'), card: '1234 ****', date: '14 Jan, 10.40 PM', amount: 840 }
           ])
+        }
+
+        // Handle contacts stats
+        if (contactsStatsResponse.status === 'fulfilled' && contactsStatsResponse.value?.data) {
+          console.log('Contacts stats received:', contactsStatsResponse.value.data)
+          setContactsStats(contactsStatsResponse.value.data)
+        } else if (contactsStatsResponse.status === 'rejected') {
+          const error = contactsStatsResponse.reason
+          console.error('Error loading contacts stats:', error)
+          // Set default stats on error
+          setContactsStats({ totalContacts: 0 })
         }
 
       } catch (err) {
@@ -704,12 +650,13 @@ const Dashboard = () => {
         setMetrics(null)
         setSalesSeries(null)
         setAccounts([])
+        setContactsStats({ totalContacts: 0 })
         setTransactions([
-          { dir: 'up', desc: 'Spotify Subscription', id: '#12548796', type: 'Shopping', card: '1234 ****', date: '28 Jan, 12.30 AM', amount: -2500 },
-          { dir: 'down', desc: 'Freepik Sales', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '25 Jan, 10.40 PM', amount: 750 },
-          { dir: 'up', desc: 'Mobile Service', id: '#12548796', type: 'Service', card: '1234 ****', date: '20 Jan, 10.40 PM', amount: -150 },
-          { dir: 'up', desc: 'Wilson', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '15 Jan, 03.29 PM', amount: -1050 },
-          { dir: 'down', desc: 'Emilly', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '14 Jan, 10.40 PM', amount: 840 }
+          { dir: 'up', desc: t('dashboard.defaultTransactions.spotifySubscription'), id: '#12548796', type: t('dashboard.transactionTypes.shopping'), card: '1234 ****', date: '28 Jan, 12.30 AM', amount: -2500 },
+          { dir: 'down', desc: t('dashboard.defaultTransactions.freepikSales'), id: '#12548796', type: t('dashboard.transactionTypes.transfer'), card: '1234 ****', date: '25 Jan, 10.40 PM', amount: 750 },
+          { dir: 'up', desc: t('dashboard.defaultTransactions.mobileService'), id: '#12548796', type: t('dashboard.transactionTypes.service'), card: '1234 ****', date: '20 Jan, 10.40 PM', amount: -150 },
+          { dir: 'up', desc: t('dashboard.defaultTransactions.wilson'), id: '#12548796', type: t('dashboard.transactionTypes.transfer'), card: '1234 ****', date: '15 Jan, 03.29 PM', amount: -1050 },
+          { dir: 'down', desc: t('dashboard.defaultTransactions.emilly'), id: '#12548796', type: t('dashboard.transactionTypes.transfer'), card: '1234 ****', date: '14 Jan, 10.40 PM', amount: 840 }
         ])
       } finally {
         setLoading(false)
@@ -717,7 +664,7 @@ const Dashboard = () => {
     }
 
     loadDashboardData()
-  }, [navigate])
+  }, [navigate, t])
 
   // Process sales series data for charts
   const lineData2024 = useMemo(() => {
@@ -743,8 +690,16 @@ const Dashboard = () => {
 
   const chartOrderData = useMemo(() => [180, 260, 210, 240, 280, 250, 290], [])
   const chartOrderLabels = useMemo(
-    () => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-    []
+    () => [
+      t('dashboard.daysShort.sunday'),
+      t('dashboard.daysShort.monday'),
+      t('dashboard.daysShort.tuesday'),
+      t('dashboard.daysShort.wednesday'),
+      t('dashboard.daysShort.thursday'),
+      t('dashboard.daysShort.friday'),
+      t('dashboard.daysShort.saturday')
+    ],
+    [t]
   )
 
   const trafficData = useMemo(() => [40, 22, 80, 60, 50, 72, 90], [])
@@ -768,7 +723,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
@@ -779,19 +734,19 @@ const Dashboard = () => {
       
       <div className="flex">
         {/* Sidebar */}
-        <aside className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 shrink-0 flex-col bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out ${
+        <aside className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 shrink-0 flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } ${sidebarOpen ? 'flex' : 'hidden md:flex'}`}>
           {/* Logo section */}
-          <div className="px-8 pt-8 pb-6 border-b border-slate-200 md:flex items-center justify-between">
-            <div className="text-2xl font-extrabold tracking-tight text-[#002750]">
+          <div className="px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700 md:flex items-center justify-between">
+            <div className="text-2xl font-extrabold tracking-tight text-[#002750] dark:text-white">
               BizEra
             </div>
             {/* Mobile Close Button */}
             <button
               type="button"
               onClick={() => setSidebarOpen(false)}
-              className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
               aria-label="Close menu"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -800,18 +755,17 @@ const Dashboard = () => {
             </button>
           </div>
 
-          {/* Menu items – one‑to‑one with Figma */}
+          {/* Menu items */}
           <nav className="flex-1 flex flex-col text-[15px] font-semibold">
-            {/* Yuxarı əsas menyu elementləri (Tənzimləmələr daxil) */}
             <div className="flex-1 flex flex-col">
               {[
-                { label: 'Dashboard', path: '/dashboard', icon: Icon.sidebarDashboard },
-                { label: 'Məhsullar', path: '/products', icon: Icon.sidebarProducts },
-                { label: 'Satışlar', path: '/sales', icon: Icon.sidebarSales },
-                { label: 'Tapşırıqlar', path: '/tasks', icon: Icon.sidebarTasks },
-                { label: 'Müştərilər', path: '/customers', icon: Icon.sidebarCustomers },
-                { label: 'Xərclər', path: '/expenses', icon: Icon.sidebarExpenses },
-                { label: 'Tənzimləmələr', path: '/settings', icon: Icon.sidebarSettings }
+                { label: t('sidebar.dashboard'), path: '/dashboard', icon: Icon.sidebarDashboard },
+                { label: t('sidebar.products'), path: '/products', icon: Icon.sidebarProducts },
+                { label: t('sidebar.sales'), path: '/sales', icon: Icon.sidebarSales },
+                { label: t('sidebar.tasks'), path: '/tasks', icon: Icon.sidebarTasks },
+                { label: t('sidebar.customers'), path: '/customers', icon: Icon.sidebarCustomers },
+                { label: t('sidebar.expenses'), path: '/expenses', icon: Icon.sidebarExpenses },
+                { label: t('sidebar.settings'), path: '/settings', icon: Icon.sidebarSettings }
               ].map((item) => {
                 const isActive = location.pathname === item.path
                 const ItemIcon = item.icon
@@ -821,17 +775,17 @@ const Dashboard = () => {
                     type="button"
                     onClick={() => {
                       navigate(item.path)
-                      setSidebarOpen(false) // Close sidebar on mobile after navigation
+                      setSidebarOpen(false)
                     }}
                     className={`w-full flex items-center px-8 py-5 border-b transition-colors ${
                       isActive
                         ? 'bg-[#003A70] text-white border-transparent'
-                        : 'bg-white text-[#003A70] border-[#E6EDF5] hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-[#003A70] dark:text-slate-200 border-[#E6EDF5] dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <ItemIcon
                       className={`mr-4 h-5 w-5 ${
-                        isActive ? 'text-white' : 'text-[#003A70]'
+                        isActive ? 'text-white' : 'text-[#003A70] dark:text-slate-200'
                       }`}
                     />
                     <span>{item.label}</span>
@@ -840,14 +794,13 @@ const Dashboard = () => {
               })}
             </div>
 
-            {/* Aşağıda yalnız bir böyük Çıxış düyməsi */}
             <div className="px-4 pb-4 pt-3">
               <button
                 type="button"
                 onClick={logout}
-                className="w-full flex items-center justify-between rounded-xl bg-[#F3F7FB] px-5 py-3 text-[15px] font-semibold text-[#003A70] hover:bg-[#e7f0f9] transition-colors"
+                className="w-full flex items-center justify-between rounded-xl bg-[#F3F7FB] dark:bg-slate-700 px-5 py-3 text-[15px] font-semibold text-[#003A70] dark:text-white hover:bg-[#e7f0f9] dark:hover:bg-slate-600 transition-colors"
               >
-                <span>Çıxış</span>
+                <span>{t('common.logout')}</span>
                 <Icon.sidebarLogout className="h-5 w-5" />
               </button>
             </div>
@@ -857,151 +810,56 @@ const Dashboard = () => {
         {/* Main */}
         <main className="flex-1 w-full md:w-auto">
           {/* Top bar */}
-          <div className="sticky top-0 z-10 bg-white border-b">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-              {/* Mobile Menu Button */}
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
-                aria-label="Open menu"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              
-              <div className="relative w-48 sm:w-72 md:w-96">
-                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                  <Icon.search className="w-4 h-4" />
-                </span>
-                <input
-                  placeholder="Axtar"
-                  className="w-full rounded-xl bg-slate-100 pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Icon.globe className="w-5 h-5 text-slate-600" />
-                <Icon.moon className="w-5 h-5 text-slate-600" />
-                <div className="relative">
-                  <button onClick={() => setNotifOpen((v) => !v)} className="relative p-2 rounded-lg hover:bg-slate-100">
-                    <Icon.bell className="w-5 h-5 text-slate-600" />
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 rounded-full"></span>
-                  </button>
-                  {notifOpen && (
-                    <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border p-3">
-                      <div className="flex items-center justify-between text-sm text-slate-500 mb-2">
-                        <span>November 2025</span>
-                        <button className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700">Read All</button>
-                      </div>
-                      {[1,2,3,4].map((i) => (
-                        <div key={i} className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50">
-                          <div className="w-9 h-9 rounded-full bg-slate-200" />
-                          <div className="flex-1">
-                            <div className="text-slate-800 text-sm font-semibold leading-5">Meg Griffin left you a review. Both reviews are now public.</div>
-                            <div className="text-xs text-slate-500 mt-0.5">March 1, 2023</div>
-                          </div>
-                          <button className="text-rose-500 hover:text-rose-600">
-                            <Icon.trash className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/profile')}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                >
-                  {(() => {
-                    const userData = getUserData()
-                    const displayName = userData?.fullName || 
-                                     (userData?.name && userData?.surname 
-                                       ? `${userData.name} ${userData.surname}`.trim()
-                                       : userData?.name || 'User')
-                    const displayRole = userData?.role || 'Admin'
-                    const getInitials = () => {
-                      if (userData?.name && userData?.surname) {
-                        return `${userData.name.charAt(0)}${userData.surname.charAt(0)}`.toUpperCase()
-                      }
-                      if (userData?.name) {
-                        return userData.name.charAt(0).toUpperCase()
-                      }
-                      if (userData?.fullName) {
-                        const parts = userData.fullName.split(' ')
-                        if (parts.length >= 2) {
-                          return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase()
-                        }
-                        return userData.fullName.charAt(0).toUpperCase()
-                      }
-                      return 'U'
-                    }
-                    return (
-                      <>
-                        <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-xs font-semibold text-slate-700">
-                          {getInitials()}
-                        </div>
-                        <div className="hidden sm:block">
-                          <div className="text-sm font-semibold">{displayName}</div>
-                          <div className="text-xs text-emerald-600">{displayRole}</div>
-                        </div>
-                      </>
-                    )
-                  })()}
-                </button>
-              </div>
-            </div>
-          </div>
+          <TopBar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
           {/* Content */}
           <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 py-6 sm:py-8">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-6">Dashboard</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white mb-6">{t('dashboard.title')}</h1>
 
             {/* Error Message */}
             {error && (
-              <div className="mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm font-medium">{error}</p>
+              <div className="mb-4 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-red-600 dark:text-red-400 text-sm font-medium">{error}</p>
               </div>
             )}
 
             {/* Loading State */}
             {loading && (
-              <div className="mb-6 text-center text-slate-500">
-                Yüklənir...
+              <div className="mb-6 text-center text-slate-500 dark:text-slate-400">
+                {t('common.loading')}
               </div>
             )}
 
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <StatCard
-                title="Ümumi istifadəçi"
-                value={metrics?.totalUsers !== undefined && metrics?.totalUsers !== null ? metrics.totalUsers.toLocaleString() : '0'}
-                trend={metrics?.userTrend || '+8.5% Dünəndən yuxarı'}
+                title={t('dashboard.totalUsers')}
+                value={contactsStats?.totalContacts !== undefined && contactsStats?.totalContacts !== null ? contactsStats.totalContacts.toLocaleString() : '0'}
+                trend={metrics?.userTrend || `+8.5% ${t('dashboard.trendUp')}`}
                 trendType={metrics?.userTrendType || 'up'}
                 tone="indigo"
                 icon={<Icon.user className="w-6 h-6" />}
               />
               <StatCard
-                title="Ümumi sifariş"
+                title={t('dashboard.totalOrders')}
                 value={metrics?.totalOrders !== undefined && metrics?.totalOrders !== null ? metrics.totalOrders.toLocaleString() : '0'}
-                trend={metrics?.orderTrend || '+1.3% keçən həftədən yuxarı'}
+                trend={metrics?.orderTrend || `+1.3% ${t('dashboard.trendUp')}`}
                 trendType={metrics?.orderTrendType || 'up'}
                 tone="amber"
                 icon={<Icon.cube className="w-6 h-6" />}
               />
               <StatCard
-                title="Ümumi satış"
+                title={t('dashboard.totalSales')}
                 value={metrics?.totalSales !== undefined && metrics?.totalSales !== null ? `$${metrics.totalSales.toLocaleString()}` : '$0'}
-                trend={metrics?.salesTrend || '-4.3% Dünəndən aşağı'}
+                trend={metrics?.salesTrend || `-4.3% ${t('dashboard.trendDown')}`}
                 trendType={metrics?.salesTrendType || 'down'}
                 tone="emerald"
                 icon={<Icon.chart className="w-6 h-6" />}
               />
               <StatCard
-                title="Ümumi gözləyən"
+                title={t('dashboard.totalPending')}
                 value={metrics?.totalPending !== undefined && metrics?.totalPending !== null ? metrics.totalPending.toLocaleString() : '0'}
-                trend={metrics?.pendingTrend || '+1.8% Dünəndən yuxarı'}
+                trend={metrics?.pendingTrend || `+1.8% ${t('dashboard.trendUp')}`}
                 trendType={metrics?.pendingTrendType || 'up'}
                 tone="rose"
                 icon={<Icon.clock className="w-6 h-6" />}
@@ -1015,18 +873,18 @@ const Dashboard = () => {
                 {/* Three donut pies */}
                 <div className="bg-white rounded-2xl shadow-sm border p-4 sm:p-5 md:p-6 flex flex-col">
                   <h2 className="text-slate-800 font-semibold text-lg sm:text-xl mb-3 sm:mb-4">
-                    Pie Chart
+                    {t('dashboard.pieChart')}
                   </h2>
                   <div className="flex flex-wrap justify-around gap-4 sm:gap-5 md:gap-6">
-                    <DonutPie percent={81} label="Total Order" color="red" />
+                    <DonutPie percent={81} label={t('dashboard.totalOrder')} color="red" />
                     <DonutPie
                       percent={22}
-                      label="Customer Growth"
+                      label={t('dashboard.customerGrowth')}
                       color="green"
                     />
                     <DonutPie
                       percent={62}
-                      label="Total Revenue"
+                      label={t('dashboard.totalRevenue')}
                       color="blue"
                     />
                   </div>
@@ -1036,13 +894,13 @@ const Dashboard = () => {
                 <div className="bg-white rounded-2xl shadow-sm border p-4 sm:p-5 md:p-6 flex flex-col">
                   <div className="flex items-center justify-between mb-4 sm:mb-5">
                     <h2 className="text-slate-800 font-semibold text-lg sm:text-xl">
-                      Customer Map
+                      {t('dashboard.customerMap')}
                     </h2>
                     <button
                       type="button"
                       className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs sm:text-sm text-slate-700"
                     >
-                      Weekly
+                      {t('dashboard.weekly')}
                       <svg
                         className="w-3 h-3"
                         viewBox="0 0 24 24"
@@ -1080,7 +938,7 @@ const Dashboard = () => {
                               />
                             </div>
                             <div className="mt-2 text-[11px] text-slate-400">
-                              Sun
+                              {t('dashboard.daysShort.sunday')}
                             </div>
                           </div>
                         )
@@ -1094,8 +952,8 @@ const Dashboard = () => {
               <section className="bg-white rounded-2xl shadow-sm border p-4 sm:p-5 md:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4 sm:mb-5">
                   <div>
-                    <h2 className="text-slate-800 font-semibold text-lg sm:text-xl">Total Revenue</h2>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Compare your earnings between 2024 and 2025.</p>
+                    <h2 className="text-slate-800 font-semibold text-lg sm:text-xl">{t('dashboard.totalRevenue')}</h2>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">{t('dashboard.compareEarnings')}</p>
                   </div>
                   <div className="flex items-center gap-3 text-xs sm:text-sm">
                     <button className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 font-medium">
@@ -1117,9 +975,9 @@ const Dashboard = () => {
                 <section className="bg-white rounded-2xl shadow-sm border p-4 sm:p-5 md:p-6">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-4 sm:mb-5">
                     <div>
-                      <h2 className="text-slate-800 font-semibold text-lg sm:text-xl">Chart Order</h2>
+                      <h2 className="text-slate-800 font-semibold text-lg sm:text-xl">{t('dashboard.chartOrder')}</h2>
                       <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                        Lorem ipsum dolor sit amet, consectetur adip.
+                        {t('dashboard.chartOrderDesc')}
                       </p>
                     </div>
                     <button className="inline-flex items-center gap-2 px-3 py-1.5 sm:py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium">
@@ -1131,7 +989,7 @@ const Dashboard = () => {
                           strokeLinejoin="round"
                         />
                       </svg>
-                      Save Report
+                      {t('dashboard.saveReport')}
                     </button>
                   </div>
                   <ChartOrderArea data={chartOrderData} labels={chartOrderLabels} />
@@ -1141,8 +999,8 @@ const Dashboard = () => {
                 <section className="bg-white rounded-2xl shadow-sm border p-4 sm:p-5 md:p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h2 className="text-slate-800 font-semibold text-lg sm:text-xl">Daily Traffic</h2>
-                      <p className="text-xs sm:text-sm text-slate-500 mt-1">Visitors for your store today.</p>
+                      <h2 className="text-slate-800 font-semibold text-lg sm:text-xl">{t('dashboard.dailyTraffic')}</h2>
+                      <p className="text-xs sm:text-sm text-slate-500 mt-1">{t('dashboard.visitorsDesc')}</p>
                     </div>
                     <div className="flex items-center gap-1 text-emerald-500 text-xs sm:text-sm font-semibold">
                       <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -1151,7 +1009,7 @@ const Dashboard = () => {
                   </div>
                   <div className="mb-3 sm:mb-4">
                     <div className="text-2xl sm:text-3xl font-bold text-slate-800">2.579</div>
-                    <div className="text-xs text-slate-500 mt-1">Visitors</div>
+                    <div className="text-xs text-slate-500 mt-1">{t('dashboard.visitors')}</div>
                   </div>
                   <DailyTrafficChart data={trafficData} labels={trafficLabels} />
                 </section>
@@ -1161,24 +1019,24 @@ const Dashboard = () => {
             {/* Recent Transactions */}
             <div className="mt-8 bg-white rounded-2xl shadow-sm border">
               <div className="p-5">
-                <div className="text-slate-700 font-semibold mb-4">Recent Transactions</div>
+                <div className="text-slate-700 font-semibold mb-4">{t('dashboard.recentTransactions')}</div>
                 <div className="flex gap-6 text-sm">
-                  <button className="pb-2 border-b-2 border-slate-900 font-semibold">All Transactions</button>
-                  <button className="pb-2 text-slate-500 hover:text-slate-700">Income</button>
-                  <button className="pb-2 text-slate-500 hover:text-slate-700">Expense</button>
+                  <button className="pb-2 border-b-2 border-slate-900 font-semibold">{t('dashboard.allTransactions')}</button>
+                  <button className="pb-2 text-slate-500 hover:text-slate-700">{t('dashboard.income')}</button>
+                  <button className="pb-2 text-slate-500 hover:text-slate-700">{t('dashboard.expense')}</button>
                 </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead className="text-slate-500">
                     <tr className="text-left">
-                      <th className="px-6 py-3 font-medium">Description</th>
-                      <th className="px-6 py-3 font-medium">Transaction ID</th>
-                      <th className="px-6 py-3 font-medium">Type</th>
-                      <th className="px-6 py-3 font-medium">Card</th>
-                      <th className="px-6 py-3 font-medium">Date</th>
-                      <th className="px-6 py-3 font-medium">Amount</th>
-                      <th className="px-6 py-3 font-medium">Receipt</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.description')}</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.transactionId')}</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.type')}</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.card')}</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.date')}</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.amount')}</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.receipt')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -1208,21 +1066,21 @@ const Dashboard = () => {
                 </table>
               </div>
               <div className="flex items-center justify-center gap-3 p-4">
-                <button className="text-slate-500 hover:text-slate-700">Previous</button>
+                <button className="text-slate-500 hover:text-slate-700">{t('common.previous')}</button>
                 {[1,2,3,4].map((p) => (
                   <button key={p} className={`w-9 h-9 rounded-full ${p === 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>{p}</button>
                 ))}
-                <button className="text-slate-500 hover:text-slate-700">Next</button>
+                <button className="text-slate-500 hover:text-slate-700">{t('common.next')}</button>
               </div>
             </div>
 
             {/* Account Details */}
             <div className="mt-8 bg-white rounded-2xl shadow-sm border">
               <div className="p-5 flex items-center justify-between">
-                <div className="text-slate-800 text-lg font-extrabold">Account Details</div>
+                <div className="text-slate-800 text-lg font-extrabold">{t('dashboard.accountDetails')}</div>
                 <div>
                   <button className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm">
-                    Oktyabr
+                    {t('dashboard.months.october')}
                     <svg
                       className="w-3 h-3 text-slate-500"
                       viewBox="0 0 24 24"
@@ -1243,11 +1101,11 @@ const Dashboard = () => {
                 <table className="min-w-full text-sm">
                   <thead className="bg-slate-50 text-slate-600">
                     <tr className="text-left">
-                      <th className="px-6 py-3 font-medium">Account Name</th>
-                      <th className="px-6 py-3 font-medium">Subscription</th>
-                      <th className="px-6 py-3 font-medium">Comments</th>
-                      <th className="px-6 py-3 font-medium">Likes</th>
-                      <th className="px-6 py-3 font-medium">Tags</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.accountName')}</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.subscription')}</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.comments')}</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.likes')}</th>
+                      <th className="px-6 py-3 font-medium">{t('dashboard.tags')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -1258,29 +1116,29 @@ const Dashboard = () => {
                             <div className="flex items-center gap-3">
                               <span className="w-9 h-9 rounded-full bg-slate-200" />
                               <span className="font-medium text-slate-800">
-                                {acc.accountName || acc.name || 'UserName'}
+                                {acc.accountName || acc.name || t('dashboard.userName')}
                               </span>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-slate-700">
-                            {acc.subscription || acc.sub || 'N/A'}
+                            {acc.subscription || acc.sub || t('dashboard.notAvailable')}
                           </td>
                           <td className="px-6 py-4 text-slate-700">
-                            {acc.comments || acc.com || 'N/A'}
+                            {acc.comments || acc.com || t('dashboard.notAvailable')}
                           </td>
                           <td className="px-6 py-4 text-slate-700">
-                            {acc.likes || acc.like || 'N/A'}
+                            {acc.likes || acc.like || t('dashboard.notAvailable')}
                           </td>
                           <td className="px-6 py-4 text-slate-700">
-                            {acc.tags || acc.tag || 'N/A'}
+                            {acc.tags || acc.tag || t('dashboard.notAvailable')}
                           </td>
                         </tr>
                       ))
                     ) : (
                       [
-                        { name: 'UserName', sub: '70K', com: '3000', like: '423', tag: '$34,295' },
-                        { name: 'UserName', sub: '157K', com: '207', like: '423', tag: '$34,295' },
-                        { name: 'UserName', sub: '57K', com: '1K', like: '423', tag: '$34,295' }
+                        { name: t('dashboard.userName'), sub: '70K', com: '3000', like: '423', tag: '$34,295' },
+                        { name: t('dashboard.userName'), sub: '157K', com: '207', like: '423', tag: '$34,295' },
+                        { name: t('dashboard.userName'), sub: '57K', com: '1K', like: '423', tag: '$34,295' }
                       ].map((u, i) => (
                         <tr key={i} className="hover:bg-slate-50">
                           <td className="px-6 py-4">
