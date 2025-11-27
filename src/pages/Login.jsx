@@ -63,16 +63,27 @@ const Login = () => {
       }
 
       const response = await authAPI.login(email, password)
+      console.log('Login response:', response)
+      console.log('Response status:', response?.status)
 
-      // Store token if provided
-      if (response?.data?.token) {
-        localStorage.setItem('bizera_token', response.data.token)
-      }
-      
       // Mark as authenticated if response is successful (200 or 201)
-      // Even if no token is returned, if status is 200, login is successful
+      // With cookie-based auth, token is stored in cookie automatically by backend
       if (response?.status === 200 || response?.status === 201) {
+        // Cookie-based authentication - token is automatically stored in cookie by backend
+        // We just need to mark user as authenticated
         localStorage.setItem('bizera_auth', 'true')
+        console.log('User authenticated - cookie should be stored by backend')
+        
+        // Wait a bit for cookie to be set, then check
+        setTimeout(() => {
+          const cookies = document.cookie
+          if (!cookies || cookies.length === 0) {
+            console.warn('⚠️ WARNING: No cookies found after login!')
+            console.warn('Backend cookie set etməlidir. Network tab-da Set-Cookie header-ını yoxlayın.')
+          } else {
+            console.log('✅ Cookies found after login')
+          }
+        }, 500)
         
         // Store rememberMe preference
         if (formData.rememberMe) {
@@ -81,17 +92,28 @@ const Login = () => {
           localStorage.removeItem('bizera_rememberMe')
         }
 
-        // Save or update user data from API response or use existing data
+        // Save or update user data from API response
         if (response?.data?.user) {
           saveUserData({
             ...response.data.user,
-            email: response.data.user.email || email
+            email: response.data.user.email || email,
+            userId: response.data.user.id || response.data.user.userId || response.data.userId
           })
+          if (response.data.user.id || response.data.user.userId || response.data.userId) {
+            localStorage.setItem('bizera_userId', response.data.user.id || response.data.user.userId || response.data.userId)
+          }
+        } else if (response?.data?.userId) {
+          localStorage.setItem('bizera_userId', response.data.userId)
+          const existingData = getUserData()
+          if (existingData) {
+            saveUserData({
+              ...existingData,
+              userId: response.data.userId
+            })
+          }
         } else {
-          // If no user data from API, check if we have existing data
           const existingData = getUserData()
           if (!existingData) {
-            // If no existing data, create minimal user data from email
             const emailParts = email.split('@')
             const name = emailParts[0].charAt(0).toUpperCase() + emailParts[0].slice(1)
             saveUserData({
@@ -103,13 +125,36 @@ const Login = () => {
           }
         }
         
-        // Navigate to dashboard on success immediately
+        // Navigate to dashboard on success
         navigate('/dashboard', { replace: true })
       } else {
         throw new Error('Daxil olma uğursuz oldu. Zəhmət olmasa yenidən cəhd edin.')
       }
     } catch (err) {
-      const errorMsg = err.message || 'Daxil olma uğursuz oldu. Zəhmət olmasa email və şifrəni yoxlayın.'
+      console.error('Login error:', err)
+      
+      // Handle different error formats
+      let errorMsg = 'Daxil olma uğursuz oldu. Zəhmət olmasa email və şifrəni yoxlayın.'
+      
+      if (err.message) {
+        errorMsg = err.message
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message
+      } else if (err.response?.data?.error) {
+        errorMsg = err.response.data.error
+      } else if (typeof err === 'string') {
+        errorMsg = err
+      }
+      
+      // Handle specific error cases
+      if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
+        errorMsg = 'Email və ya şifrə yanlışdır. Zəhmət olmasa yenidən cəhd edin.'
+      } else if (errorMsg.includes('404') || errorMsg.includes('Not Found')) {
+        errorMsg = 'İstifadəçi tapılmadı. Zəhmət olmasa email ünvanınızı yoxlayın.'
+      } else if (errorMsg.includes('400') || errorMsg.includes('Bad Request')) {
+        errorMsg = 'Email və ya şifrə düzgün deyil. Zəhmət olmasa yenidən cəhd edin.'
+      }
+      
       setError(errorMsg)
     } finally {
       setIsLoading(false)

@@ -69,6 +69,7 @@ const Register = () => {
       // Check if registration was successful (200 or 201 status)
       if (response.status === 200 || response.status === 201) {
         // Save user data to localStorage
+        const userId = response.data?.user?.id || response.data?.user?.userId || response.data?.userId
         saveUserData({
           name: formData.name.trim(),
           surname: formData.surname.trim(),
@@ -77,8 +78,14 @@ const Register = () => {
           birthDate: formData.birthDate,
           businessName: formData.businessName.trim(),
           businessCategory: formData.businessCategory,
-          role: 'Admin' // Default role
+          role: 'Admin', // Default role
+          userId: userId
         })
+
+        // Store userId separately for easy access
+        if (userId) {
+          localStorage.setItem('bizera_userId', userId)
+        }
 
         // Store token if provided by backend
         if (response.data?.token) {

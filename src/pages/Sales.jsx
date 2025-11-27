@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { authAPI } from '../services/api'
 import { Icon } from './Dashboard'
@@ -49,28 +50,52 @@ const sales = [
 const Sales = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const logout = async () => {
     try {
+      // Cookie-based auth - logout will clear cookie on backend
       await authAPI.logout()
     } catch (error) {
       console.error('Logout API error:', error)
     } finally {
+      // Clear local auth state
       localStorage.removeItem('bizera_auth')
-      localStorage.removeItem('bizera_token')
       localStorage.removeItem('bizera_rememberMe')
       clearUserData()
+      // Cookie will be cleared by backend on logout
       navigate('/login', { replace: true })
     }
   }
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       <div className="flex">
         {/* Sidebar */}
-        <aside className="hidden md:flex w-64 shrink-0 flex-col bg-white border-r border-slate-200">
-          <div className="px-8 pt-8 pb-6 border-b border-slate-200">
+        <aside className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 shrink-0 flex-col bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        } ${sidebarOpen ? 'flex' : 'hidden md:flex'}`}>
+          <div className="px-8 pt-8 pb-6 border-b border-slate-200 md:flex items-center justify-between">
             <div className="text-2xl font-extrabold tracking-tight text-[#002750]">BizEra</div>
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+              aria-label="Close menu"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
           <nav className="flex-1 flex flex-col text-[15px] font-semibold">
@@ -90,7 +115,10 @@ const Sales = () => {
                   <button
                     key={item.path}
                     type="button"
-                    onClick={() => navigate(item.path)}
+                    onClick={() => {
+                      navigate(item.path)
+                      setSidebarOpen(false) // Close sidebar on mobile after navigation
+                    }}
                     className={`w-full flex items-center px-8 py-5 border-b transition-colors ${
                       isActive
                         ? 'bg-[#003A70] text-white border-transparent'
@@ -122,10 +150,22 @@ const Sales = () => {
         </aside>
 
         {/* Main */}
-        <main className="flex-1">
+        <main className="flex-1 w-full md:w-auto">
           {/* Top bar */}
           <div className="sticky top-0 z-10 bg-white border-b">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+              {/* Mobile Menu Button */}
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+                aria-label="Open menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              
               <div className="relative w-48 sm:w-72 md:w-96">
                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
                   <Icon.search className="w-4 h-4" />
@@ -193,19 +233,19 @@ const Sales = () => {
           <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 py-6 sm:py-8">
             {/* Header: title + button */}
             <div className="flex items-center justify-between mb-4 sm:mb-5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#003A70]">Sales</h1>
-              <button className="inline-flex items-center gap-2 rounded-md bg-[#00417F] text-white text-xs sm:text-sm font-semibold px-5 sm:px-6 py-2.5 shadow-sm hover:bg-[#02498f]">
-                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#0B4C8A] shadow-sm text-base leading-none">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#003A70] shrink-0">Sales</h1>
+              <button className="inline-flex items-center gap-2 rounded-md bg-[#00417F] text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 shadow-sm hover:bg-[#02498f] shrink-0">
+                <span className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0B4C8A] shadow-sm text-sm sm:text-base leading-none">
                   +
                 </span>
-                <span>Add new sale</span>
+                <span className="whitespace-nowrap">Add new sale</span>
               </button>
             </div>
 
             {/* Sales Table */}
-            <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border overflow-x-auto">
               {/* Table Header */}
-              <div className="grid grid-cols-[120px_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_80px_120px] px-6 py-3 border-b border-slate-100 bg-slate-50/60 text-xs font-medium text-slate-500">
+              <div className="grid grid-cols-[100px_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_70px_100px] sm:grid-cols-[120px_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_80px_120px] min-w-[700px] px-3 sm:px-6 py-2 sm:py-3 border-b border-slate-100 bg-slate-50/60 text-[10px] sm:text-xs font-medium text-slate-500">
                 <div>Şəkil</div>
                 <div>Məhsulun adı</div>
                 <div>Kateqoriya</div>
@@ -219,31 +259,31 @@ const Sales = () => {
                 {sales.map((sale) => (
                   <div
                     key={sale.id}
-                    className="grid grid-cols-[120px_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_80px_120px] px-6 py-4 border-t border-slate-100 hover:bg-slate-50/60 items-center text-sm"
+                    className="grid grid-cols-[100px_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_70px_100px] sm:grid-cols-[120px_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_80px_120px] min-w-[700px] px-3 sm:px-6 py-3 sm:py-4 border-t border-slate-100 hover:bg-slate-50/60 items-center text-xs sm:text-sm"
                   >
                     {/* Image placeholder */}
                     <div className="flex items-center">
-                      <div className="w-14 h-14 rounded-xl bg-slate-200 overflow-hidden flex items-center justify-center shadow-sm">
-                        <span className="text-xs text-slate-500">IMG</span>
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-200 overflow-hidden flex items-center justify-center shadow-sm">
+                        <span className="text-[10px] sm:text-xs text-slate-500">IMG</span>
                       </div>
                     </div>
 
                     {/* Product Name */}
-                    <div>
-                      <div className="text-[13px] font-semibold text-slate-800">{sale.name}</div>
+                    <div className="min-w-0">
+                      <div className="text-xs sm:text-[13px] font-semibold text-slate-800 truncate">{sale.name}</div>
                     </div>
 
                     {/* Category */}
-                    <div className="text-[13px] text-slate-500">{sale.category}</div>
+                    <div className="text-xs sm:text-[13px] text-slate-500 truncate">{sale.category}</div>
 
                     {/* Price */}
-                    <div className="text-[13px] text-slate-800">{sale.price}</div>
+                    <div className="text-xs sm:text-[13px] text-slate-800 whitespace-nowrap">{sale.price}</div>
 
                     {/* Quantity */}
-                    <div className="text-[13px] text-slate-800 text-center">{sale.qty}</div>
+                    <div className="text-xs sm:text-[13px] text-slate-800 text-center">{sale.qty}</div>
 
                     {/* Date */}
-                    <div className="text-[13px] text-slate-800 text-center">{sale.date}</div>
+                    <div className="text-xs sm:text-[13px] text-slate-800 text-center whitespace-nowrap">{sale.date}</div>
                   </div>
                 ))}
               </div>

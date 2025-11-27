@@ -7,6 +7,7 @@ import { getUserData, updateUserData, clearUserData } from '../utils/userStorage
 const Profile = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('edit')
   const [formData, setFormData] = useState({
     name: '',
@@ -91,14 +92,16 @@ const Profile = () => {
 
   const logout = async () => {
     try {
+      // Cookie-based auth - logout will clear cookie on backend
       await authAPI.logout()
     } catch (error) {
       console.error('Logout API error:', error)
     } finally {
+      // Clear local auth state
       localStorage.removeItem('bizera_auth')
-      localStorage.removeItem('bizera_token')
       localStorage.removeItem('bizera_rememberMe')
       clearUserData()
+      // Cookie will be cleared by backend on logout
       navigate('/login', { replace: true })
     }
   }
@@ -162,11 +165,32 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       <div className="flex">
         {/* Sidebar */}
-        <aside className="hidden md:flex w-64 shrink-0 flex-col bg-white border-r border-slate-200">
-          <div className="px-8 pt-8 pb-6 border-b border-slate-200">
+        <aside className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 shrink-0 flex-col bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        } ${sidebarOpen ? 'flex' : 'hidden md:flex'}`}>
+          <div className="px-8 pt-8 pb-6 border-b border-slate-200 md:flex items-center justify-between">
             <div className="text-2xl font-extrabold tracking-tight text-[#002750]">BizEra</div>
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+              aria-label="Close menu"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
           <nav className="flex-1 flex flex-col text-[15px] font-semibold">
@@ -186,7 +210,10 @@ const Profile = () => {
                   <button
                     key={item.path}
                     type="button"
-                    onClick={() => navigate(item.path)}
+                    onClick={() => {
+                      navigate(item.path)
+                      setSidebarOpen(false) // Close sidebar on mobile after navigation
+                    }}
                     className={`w-full flex items-center px-8 py-5 border-b transition-colors ${
                       isActive
                         ? 'bg-[#003A70] text-white border-transparent'
@@ -218,10 +245,22 @@ const Profile = () => {
         </aside>
 
         {/* Main */}
-        <main className="flex-1">
+        <main className="flex-1 w-full md:w-auto">
           {/* Top bar */}
           <div className="sticky top-0 z-10 bg-white border-b">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+              {/* Mobile Menu Button */}
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+                aria-label="Open menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              
               <div className="relative w-48 sm:w-72 md:w-96">
                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
                   <Icon.search className="w-4 h-4" />

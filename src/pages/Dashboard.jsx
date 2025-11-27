@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { authAPI } from '../services/api'
+import { authAPI, dashboardAPI } from '../services/api'
 import { clearUserData, getUserData } from '../utils/userStorage'
 
 export const Icon = {
@@ -594,26 +594,148 @@ const Dashboard = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [notifOpen, setNotifOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  
+  // Dashboard data states
+  const [metrics, setMetrics] = useState(null)
+  const [salesSeries, setSalesSeries] = useState(null)
+  const [accounts, setAccounts] = useState([])
+  const [transactions, setTransactions] = useState([])
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const transactions = useMemo(
-    () => [
-    { dir: 'up', desc: 'Spotify Subscription', id: '#12548796', type: 'Shopping', card: '1234 ****', date: '28 Jan, 12.30 AM', amount: -2500 },
-    { dir: 'down', desc: 'Freepik Sales', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '25 Jan, 10.40 PM', amount: 750 },
-    { dir: 'up', desc: 'Mobile Service', id: '#12548796', type: 'Service', card: '1234 ****', date: '20 Jan, 10.40 PM', amount: -150 },
-    { dir: 'up', desc: 'Wilson', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '15 Jan, 03.29 PM', amount: -1050 },
-    { dir: 'down', desc: 'Emilly', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '14 Jan, 10.40 PM', amount: 840 }
-    ],
-    []
-  )
+  // Load dashboard data
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true)
+        setError('')
 
-  const lineData2024 = useMemo(
-    () => [15000, 22000, 14000, 26000, 34000, 29000, 31000, 27000, 23000, 12657, 21000, 24000],
-    []
-  )
-  const lineData2025 = useMemo(
-    () => [12000, 18000, 20000, 23000, 32000, 38753, 36000, 30000, 26000, 28000, 29000, 33000],
-    []
-  )
+        // Check if user is authenticated (cookie-based auth)
+        const isAuthenticated = localStorage.getItem('bizera_auth') === 'true'
+        if (!isAuthenticated) {
+          setError('Giriş edilməyib. Zəhmət olmasa yenidən daxil olun.')
+          navigate('/login', { replace: true })
+          return
+        }
+        
+        // Cookie-based auth - token is automatically sent in cookie
+
+        // Load all data in parallel
+        const [metricsResponse, salesResponse, accountsResponse, allAccountsResponse] = await Promise.allSettled([
+          dashboardAPI.getMetrics(),
+          (async () => {
+            const now = new Date()
+            const from = new Date(now.getFullYear() - 1, now.getMonth(), 1).toISOString()
+            const to = now.toISOString()
+            return dashboardAPI.getSalesSeries({ from, to, userOnly: false })
+          })(),
+          dashboardAPI.getAccounts(),
+          dashboardAPI.getAllAccounts()
+        ])
+
+        // Handle metrics
+        if (metricsResponse.status === 'fulfilled' && metricsResponse.value?.data) {
+          console.log('Dashboard metrics received:', metricsResponse.value.data)
+          setMetrics(metricsResponse.value.data)
+        } else if (metricsResponse.status === 'rejected') {
+          const error = metricsResponse.reason
+          console.error('Error loading metrics:', error)
+          // Don't logout on 401, just show error and use default data
+        }
+
+        // Handle sales series
+        if (salesResponse.status === 'fulfilled' && salesResponse.value?.data) {
+          setSalesSeries(salesResponse.value.data)
+        } else if (salesResponse.status === 'rejected') {
+          const error = salesResponse.reason
+          console.error('Error loading sales series:', error)
+        }
+
+        // Handle accounts
+        if (accountsResponse.status === 'fulfilled' && accountsResponse.value?.data) {
+          setAccounts(Array.isArray(accountsResponse.value.data) ? accountsResponse.value.data : [])
+        } else if (accountsResponse.status === 'rejected') {
+          const error = accountsResponse.reason
+          console.error('Error loading accounts:', error)
+        }
+
+        // Handle all accounts (transactions)
+        if (allAccountsResponse.status === 'fulfilled' && allAccountsResponse.value?.data) {
+          const transformedTransactions = Array.isArray(allAccountsResponse.value.data) 
+            ? allAccountsResponse.value.data.map((acc, idx) => ({
+                dir: idx % 2 === 0 ? 'up' : 'down',
+                desc: acc.accountName || acc.name || 'Transaction',
+                id: `#${acc.id?.toString().slice(-8) || idx}`,
+                type: acc.subscription || 'Transfer',
+                card: '1234 ****',
+                date: acc.date || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+                amount: acc.amount || (idx % 2 === 0 ? -1000 : 500)
+              }))
+            : []
+          setTransactions(transformedTransactions.length > 0 ? transformedTransactions : [
+            { dir: 'up', desc: 'Spotify Subscription', id: '#12548796', type: 'Shopping', card: '1234 ****', date: '28 Jan, 12.30 AM', amount: -2500 },
+            { dir: 'down', desc: 'Freepik Sales', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '25 Jan, 10.40 PM', amount: 750 },
+            { dir: 'up', desc: 'Mobile Service', id: '#12548796', type: 'Service', card: '1234 ****', date: '20 Jan, 10.40 PM', amount: -150 },
+            { dir: 'up', desc: 'Wilson', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '15 Jan, 03.29 PM', amount: -1050 },
+            { dir: 'down', desc: 'Emilly', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '14 Jan, 10.40 PM', amount: 840 }
+          ])
+        } else if (allAccountsResponse.status === 'rejected') {
+          const error = allAccountsResponse.reason
+          console.error('Error loading all accounts:', error)
+          // Set default transactions on error
+          setTransactions([
+            { dir: 'up', desc: 'Spotify Subscription', id: '#12548796', type: 'Shopping', card: '1234 ****', date: '28 Jan, 12.30 AM', amount: -2500 },
+            { dir: 'down', desc: 'Freepik Sales', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '25 Jan, 10.40 PM', amount: 750 },
+            { dir: 'up', desc: 'Mobile Service', id: '#12548796', type: 'Service', card: '1234 ****', date: '20 Jan, 10.40 PM', amount: -150 },
+            { dir: 'up', desc: 'Wilson', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '15 Jan, 03.29 PM', amount: -1050 },
+            { dir: 'down', desc: 'Emilly', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '14 Jan, 10.40 PM', amount: 840 }
+          ])
+        }
+
+      } catch (err) {
+        console.error('Error loading dashboard data:', err)
+        
+        // Don't logout on 401 - just show error and use default data
+        // User can still use the dashboard with default data
+        setError('Bəzi məlumatlar yüklənə bilmədi. Zəhmət olmasa yenidən cəhd edin.')
+        
+        // Set default data on error so user can still see the dashboard
+        setMetrics(null)
+        setSalesSeries(null)
+        setAccounts([])
+        setTransactions([
+          { dir: 'up', desc: 'Spotify Subscription', id: '#12548796', type: 'Shopping', card: '1234 ****', date: '28 Jan, 12.30 AM', amount: -2500 },
+          { dir: 'down', desc: 'Freepik Sales', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '25 Jan, 10.40 PM', amount: 750 },
+          { dir: 'up', desc: 'Mobile Service', id: '#12548796', type: 'Service', card: '1234 ****', date: '20 Jan, 10.40 PM', amount: -150 },
+          { dir: 'up', desc: 'Wilson', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '15 Jan, 03.29 PM', amount: -1050 },
+          { dir: 'down', desc: 'Emilly', id: '#12548796', type: 'Transfer', card: '1234 ****', date: '14 Jan, 10.40 PM', amount: 840 }
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadDashboardData()
+  }, [navigate])
+
+  // Process sales series data for charts
+  const lineData2024 = useMemo(() => {
+    if (!salesSeries) return [15000, 22000, 14000, 26000, 34000, 29000, 31000, 27000, 23000, 12657, 21000, 24000]
+    // Transform sales series data to chart format
+    // Assuming salesSeries is an array or object with data points
+    if (Array.isArray(salesSeries)) {
+      return salesSeries.slice(0, 12).map(item => item.value || item.amount || 0)
+    }
+    return [15000, 22000, 14000, 26000, 34000, 29000, 31000, 27000, 23000, 12657, 21000, 24000]
+  }, [salesSeries])
+
+  const lineData2025 = useMemo(() => {
+    if (!salesSeries) return [12000, 18000, 20000, 23000, 32000, 38753, 36000, 30000, 26000, 28000, 29000, 33000]
+    // Use current year data if available
+    return lineData2024.map(val => val * 1.1) // Fallback: 10% increase
+  }, [salesSeries, lineData2024])
+
   const lineMonths = useMemo(
     () => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'],
     []
@@ -630,31 +752,52 @@ const Dashboard = () => {
 
   const logout = async () => {
     try {
-      // Call logout API
+      // Cookie-based auth - logout will clear cookie on backend
       await authAPI.logout()
     } catch (error) {
       // Log error but still proceed with logout
       console.error('Logout API error:', error)
     } finally {
-      // Clear local storage and navigate regardless of API result
+      // Clear local auth state
       localStorage.removeItem('bizera_auth')
-      localStorage.removeItem('bizera_token')
       localStorage.removeItem('bizera_rememberMe')
       clearUserData()
+      // Cookie will be cleared by backend on logout
       navigate('/login', { replace: true })
     }
   }
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       <div className="flex">
         {/* Sidebar */}
-        <aside className="hidden md:flex w-64 shrink-0 flex-col bg-white border-r border-slate-200">
+        <aside className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 shrink-0 flex-col bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        } ${sidebarOpen ? 'flex' : 'hidden md:flex'}`}>
           {/* Logo section */}
-          <div className="px-8 pt-8 pb-6 border-b border-slate-200">
+          <div className="px-8 pt-8 pb-6 border-b border-slate-200 md:flex items-center justify-between">
             <div className="text-2xl font-extrabold tracking-tight text-[#002750]">
               BizEra
             </div>
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+              aria-label="Close menu"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
           {/* Menu items – one‑to‑one with Figma */}
@@ -676,7 +819,10 @@ const Dashboard = () => {
                   <button
                     key={item.path}
                     type="button"
-                    onClick={() => navigate(item.path)}
+                    onClick={() => {
+                      navigate(item.path)
+                      setSidebarOpen(false) // Close sidebar on mobile after navigation
+                    }}
                     className={`w-full flex items-center px-8 py-5 border-b transition-colors ${
                       isActive
                         ? 'bg-[#003A70] text-white border-transparent'
@@ -709,10 +855,22 @@ const Dashboard = () => {
         </aside>
 
         {/* Main */}
-        <main className="flex-1">
+        <main className="flex-1 w-full md:w-auto">
           {/* Top bar */}
           <div className="sticky top-0 z-10 bg-white border-b">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+              {/* Mobile Menu Button */}
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+                aria-label="Open menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              
               <div className="relative w-48 sm:w-72 md:w-96">
                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
                   <Icon.search className="w-4 h-4" />
@@ -800,37 +958,51 @@ const Dashboard = () => {
           <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 py-6 sm:py-8">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-6">Dashboard</h1>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm font-medium">{error}</p>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {loading && (
+              <div className="mb-6 text-center text-slate-500">
+                Yüklənir...
+              </div>
+            )}
+
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <StatCard
                 title="Ümumi istifadəçi"
-                value="40,689"
-                trend="+8.5% Dünəndən yuxarı"
-                trendType="up"
+                value={metrics?.totalUsers !== undefined && metrics?.totalUsers !== null ? metrics.totalUsers.toLocaleString() : '0'}
+                trend={metrics?.userTrend || '+8.5% Dünəndən yuxarı'}
+                trendType={metrics?.userTrendType || 'up'}
                 tone="indigo"
                 icon={<Icon.user className="w-6 h-6" />}
               />
               <StatCard
                 title="Ümumi sifariş"
-                value="10,293"
-                trend="+1.3% keçən həftədən yuxarı"
-                trendType="up"
+                value={metrics?.totalOrders !== undefined && metrics?.totalOrders !== null ? metrics.totalOrders.toLocaleString() : '0'}
+                trend={metrics?.orderTrend || '+1.3% keçən həftədən yuxarı'}
+                trendType={metrics?.orderTrendType || 'up'}
                 tone="amber"
                 icon={<Icon.cube className="w-6 h-6" />}
               />
               <StatCard
                 title="Ümumi satış"
-                value="$89,000"
-                trend="-4.3% Dünəndən aşağı"
-                trendType="down"
+                value={metrics?.totalSales !== undefined && metrics?.totalSales !== null ? `$${metrics.totalSales.toLocaleString()}` : '$0'}
+                trend={metrics?.salesTrend || '-4.3% Dünəndən aşağı'}
+                trendType={metrics?.salesTrendType || 'down'}
                 tone="emerald"
                 icon={<Icon.chart className="w-6 h-6" />}
               />
               <StatCard
                 title="Ümumi gözləyən"
-                value="2040"
-                trend="+1.8% Dünəndən yuxarı"
-                trendType="up"
+                value={metrics?.totalPending !== undefined && metrics?.totalPending !== null ? metrics.totalPending.toLocaleString() : '0'}
+                trend={metrics?.pendingTrend || '+1.8% Dünəndən yuxarı'}
+                trendType={metrics?.pendingTrendType || 'up'}
                 tone="rose"
                 icon={<Icon.clock className="w-6 h-6" />}
               />
@@ -1079,24 +1251,51 @@ const Dashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {[
-                      { name: 'UserName', sub: '70K', com: '3000', like: '423', tag: '$34,295' },
-                      { name: 'UserName', sub: '157K', com: '207', like: '423', tag: '$34,295' },
-                      { name: 'UserName', sub: '57K', com: '1K', like: '423', tag: '$34,295' }
-                    ].map((u, i) => (
-                      <tr key={i} className="hover:bg-slate-50">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <span className="w-9 h-9 rounded-full bg-slate-200" />
-                            <span className="font-medium text-slate-800">{u.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-slate-700">{u.sub}</td>
-                        <td className="px-6 py-4 text-slate-700">{u.com}</td>
-                        <td className="px-6 py-4 text-slate-700">{u.like}</td>
-                        <td className="px-6 py-4 text-slate-700">{u.tag}</td>
-                      </tr>
-                    ))}
+                    {accounts.length > 0 ? (
+                      accounts.map((acc, i) => (
+                        <tr key={acc.id || i} className="hover:bg-slate-50">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <span className="w-9 h-9 rounded-full bg-slate-200" />
+                              <span className="font-medium text-slate-800">
+                                {acc.accountName || acc.name || 'UserName'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-slate-700">
+                            {acc.subscription || acc.sub || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 text-slate-700">
+                            {acc.comments || acc.com || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 text-slate-700">
+                            {acc.likes || acc.like || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 text-slate-700">
+                            {acc.tags || acc.tag || 'N/A'}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      [
+                        { name: 'UserName', sub: '70K', com: '3000', like: '423', tag: '$34,295' },
+                        { name: 'UserName', sub: '157K', com: '207', like: '423', tag: '$34,295' },
+                        { name: 'UserName', sub: '57K', com: '1K', like: '423', tag: '$34,295' }
+                      ].map((u, i) => (
+                        <tr key={i} className="hover:bg-slate-50">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <span className="w-9 h-9 rounded-full bg-slate-200" />
+                              <span className="font-medium text-slate-800">{u.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-slate-700">{u.sub}</td>
+                          <td className="px-6 py-4 text-slate-700">{u.com}</td>
+                          <td className="px-6 py-4 text-slate-700">{u.like}</td>
+                          <td className="px-6 py-4 text-slate-700">{u.tag}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
