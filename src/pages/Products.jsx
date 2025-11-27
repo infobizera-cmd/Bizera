@@ -433,8 +433,8 @@ const Products = () => {
                   <span className="whitespace-nowrap">Add New Product</span>
                 </button>
               </div>
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className="relative flex-1 sm:max-w-md">
+              <div className="flex items-center gap-3 sm:gap-4 md:justify-between">
+                <div className="relative flex-1 sm:max-w-md md:max-w-none md:flex-1">
                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
                     <Icon.search className="w-4 h-4" />
                   </span>
@@ -449,7 +449,7 @@ const Products = () => {
                 <button 
                   type="button"
                   onClick={openAddProductModal}
-                  className="hidden md:inline-flex items-center gap-2 rounded-md bg-[#00417F] text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 shadow-sm hover:bg-[#02498f] shrink-0"
+                  className="hidden md:inline-flex items-center gap-2 rounded-md bg-[#00417F] text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 shadow-sm hover:bg-[#02498f] shrink-0 ml-auto md:ml-0"
                 >
                   <span className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0B4C8A] shadow-sm text-sm sm:text-base leading-none">
                     +
