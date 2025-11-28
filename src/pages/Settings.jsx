@@ -5,11 +5,13 @@ import { authAPI } from '../services/api'
 import { Icon } from './Dashboard'
 import { clearUserData, getUserData } from '../utils/userStorage'
 import TopBar from '../components/TopBar'
+import { useTheme } from '../contexts/ThemeContext'
 
 const Settings = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { t } = useTranslation()
+  const { theme, toggleTheme } = useTheme()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('general')
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
@@ -55,10 +57,20 @@ const Settings = () => {
 
   // Appearance Settings
   const [appearance, setAppearance] = useState({
-    theme: 'light',
+    theme: theme,
     fontSize: 'medium',
     compactMode: false
   })
+
+  // Sync appearance theme with ThemeContext theme
+  useEffect(() => {
+    setAppearance(prev => {
+      if (prev.theme !== theme) {
+        return { ...prev, theme: theme }
+      }
+      return prev
+    })
+  }, [theme])
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -105,12 +117,28 @@ const Settings = () => {
     const savedAppearance = localStorage.getItem('bizera_appearance')
     if (savedAppearance) {
       try {
-        setAppearance(JSON.parse(savedAppearance))
+        const parsed = JSON.parse(savedAppearance)
+        setAppearance(parsed)
+        // Sync theme with ThemeContext
+        if (parsed.theme && parsed.theme !== theme) {
+          if (parsed.theme === 'dark' && theme === 'light') {
+            toggleTheme()
+          } else if (parsed.theme === 'light' && theme === 'dark') {
+            toggleTheme()
+          }
+        }
       } catch (e) {
         console.error('Error loading appearance settings:', e)
       }
+    } else {
+      // Initialize with current theme
+      setAppearance({
+        theme: theme || 'light',
+        fontSize: 'medium',
+        compactMode: false
+      })
     }
-  }, [])
+  }, [theme, toggleTheme])
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type })
@@ -151,7 +179,10 @@ const Settings = () => {
   }
 
   const handleSaveAppearance = () => {
-    localStorage.setItem('bizera_appearance', JSON.stringify(appearance))
+    // Update appearance state with current theme before saving
+    const updatedAppearance = { ...appearance, theme: theme }
+    localStorage.setItem('bizera_appearance', JSON.stringify(updatedAppearance))
+    setAppearance(updatedAppearance)
     showToast(t('settings.appearanceSaved'), 'success')
   }
 
@@ -223,7 +254,7 @@ const Settings = () => {
               type="button"
               onClick={() => setSidebarOpen(false)}
               className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
-              aria-label="Close menu"
+              aria-label={t('common.closeMenu')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -329,80 +360,80 @@ const Settings = () => {
                     <h2 className="text-xl font-bold text-slate-800 mb-6">{t('settings.generalTitle')}</h2>
                     <div className="space-y-6">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Biznes Adı
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.businessName')}
                         </label>
                         <input
                           type="text"
                           value={generalSettings.businessName}
                           onChange={(e) => setGeneralSettings({ ...generalSettings, businessName: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Biznes adınızı daxil edin"
+                          placeholder={t('settings.businessNamePlaceholder')}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Biznes Kateqoriyası
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.businessCategory')}
                         </label>
                         <input
                           type="text"
                           value={generalSettings.businessCategory}
                           onChange={(e) => setGeneralSettings({ ...generalSettings, businessCategory: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Biznes kateqoriyanızı daxil edin"
+                          placeholder={t('settings.businessCategoryPlaceholder')}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Email
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.email')}
                         </label>
                         <input
                           type="email"
                           value={generalSettings.email}
                           onChange={(e) => setGeneralSettings({ ...generalSettings, email: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="email@example.com"
+                          placeholder={t('settings.emailPlaceholder')}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Telefon Nömrəsi
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.phoneNumber')}
                         </label>
                         <input
                           type="tel"
                           value={generalSettings.phoneNumber}
                           onChange={(e) => setGeneralSettings({ ...generalSettings, phoneNumber: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="+994 XX XXX XX XX"
+                          placeholder={t('settings.phonePlaceholder')}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Veb Sayt
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.website')}
                         </label>
                         <input
                           type="url"
                           value={generalSettings.website}
                           onChange={(e) => setGeneralSettings({ ...generalSettings, website: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="https://example.com"
+                          placeholder={t('settings.websitePlaceholder')}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Ünvan
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.address')}
                         </label>
                         <textarea
                           value={generalSettings.address}
                           onChange={(e) => setGeneralSettings({ ...generalSettings, address: e.target.value })}
                           rows={3}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Ünvanınızı daxil edin"
+                          placeholder={t('settings.addressPlaceholder')}
                         />
                       </div>
 
@@ -427,54 +458,54 @@ const Settings = () => {
                       <ToggleSwitch
                         enabled={notifications.emailNotifications}
                         onChange={(value) => setNotifications({ ...notifications, emailNotifications: value })}
-                        label="Email Bildirişləri"
-                        description="Email vasitəsilə bildirişlər alın"
+                        label={t('settings.emailNotifications')}
+                        description={t('settings.emailNotificationsDesc')}
                       />
                       <ToggleSwitch
                         enabled={notifications.pushNotifications}
                         onChange={(value) => setNotifications({ ...notifications, pushNotifications: value })}
-                        label="Push Bildirişləri"
-                        description="Brauzer push bildirişləri"
+                        label={t('settings.pushNotifications')}
+                        description={t('settings.pushNotificationsDesc')}
                       />
                       <ToggleSwitch
                         enabled={notifications.smsNotifications}
                         onChange={(value) => setNotifications({ ...notifications, smsNotifications: value })}
-                        label="SMS Bildirişləri"
-                        description="SMS vasitəsilə bildirişlər alın"
+                        label={t('settings.smsNotifications')}
+                        description={t('settings.smsNotificationsDesc')}
                       />
                       <ToggleSwitch
                         enabled={notifications.orderUpdates}
                         onChange={(value) => setNotifications({ ...notifications, orderUpdates: value })}
-                        label="Sifariş Yeniləmələri"
-                        description="Yeni sifarişlər və status dəyişiklikləri haqqında bildiriş"
+                        label={t('settings.orderUpdates')}
+                        description={t('settings.orderUpdatesDesc')}
                       />
                       <ToggleSwitch
                         enabled={notifications.paymentUpdates}
                         onChange={(value) => setNotifications({ ...notifications, paymentUpdates: value })}
-                        label="Ödəniş Yeniləmələri"
-                        description="Ödəniş statusu haqqında bildiriş"
+                        label={t('settings.paymentUpdates')}
+                        description={t('settings.paymentUpdatesDesc')}
                       />
                       <ToggleSwitch
                         enabled={notifications.marketingEmails}
                         onChange={(value) => setNotifications({ ...notifications, marketingEmails: value })}
-                        label="Marketinq Email-ləri"
-                        description="Xüsusi təkliflər və yeniliklər haqqında email"
+                        label={t('settings.marketingEmails')}
+                        description={t('settings.marketingEmailsDesc')}
                       />
                       <ToggleSwitch
                         enabled={notifications.weeklyReports}
                         onChange={(value) => setNotifications({ ...notifications, weeklyReports: value })}
-                        label="Həftəlik Hesabatlar"
-                        description="Həftəlik biznes hesabatları"
+                        label={t('settings.weeklyReports')}
+                        description={t('settings.weeklyReportsDesc')}
                       />
                     </div>
                     <div className="flex justify-end pt-6 mt-6 border-t border-slate-200">
-                      <button
-                        type="button"
-                        onClick={handleSaveNotifications}
-                        className="inline-flex items-center justify-center rounded-lg bg-[#003A70] text-white text-sm font-semibold px-6 py-2.5 shadow-sm hover:bg-[#02498f] transition-colors"
-                      >
-                        Yadda Saxla
-                      </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveNotifications}
+                          className="inline-flex items-center justify-center rounded-lg bg-[#003A70] text-white text-sm font-semibold px-6 py-2.5 shadow-sm hover:bg-[#02498f] transition-colors"
+                        >
+                          {t('common.save')}
+                        </button>
                     </div>
                   </div>
                 )}
@@ -485,41 +516,40 @@ const Settings = () => {
                     <h2 className="text-xl font-bold text-slate-800 mb-6">{t('settings.languageTitle')}</h2>
                     <div className="space-y-6">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Dil
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.languageLabel')}
                         </label>
                         <select
                           value={languageSettings.language}
                           onChange={(e) => setLanguageSettings({ ...languageSettings, language: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <option value="az">Azərbaycan</option>
-                          <option value="en">English</option>
-                          <option value="ru">Русский</option>
-                          <option value="tr">Türkçe</option>
+                          <option value="az">{t('languages.az')}</option>
+                          <option value="en">{t('languages.en')}</option>
+                          <option value="ru">{t('languages.ru')}</option>
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Vaxt Zonası
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.timeZoneLabel')}
                         </label>
                         <select
                           value={languageSettings.timeZone}
                           onChange={(e) => setLanguageSettings({ ...languageSettings, timeZone: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <option value="Asia/Baku">(GMT+4) Bakı, Azərbaycan</option>
-                          <option value="Europe/London">(GMT+0) London, UK</option>
-                          <option value="America/New_York">(GMT-5) New York, USA</option>
-                          <option value="Europe/Moscow">(GMT+3) Moskva, Rusiya</option>
-                          <option value="Europe/Istanbul">(GMT+3) İstanbul, Türkiyə</option>
+                          <option value="Asia/Baku">{t('settings.timeZoneBaku')}</option>
+                          <option value="Europe/London">{t('settings.timeZoneLondon')}</option>
+                          <option value="America/New_York">{t('settings.timeZoneNewYork')}</option>
+                          <option value="Europe/Moscow">{t('settings.timeZoneMoscow')}</option>
+                          <option value="Europe/Istanbul">{t('settings.timeZoneIstanbul')}</option>
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Tarix Formatı
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.dateFormatLabel')}
                         </label>
                         <select
                           value={languageSettings.dateFormat}
@@ -534,33 +564,33 @@ const Settings = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Vaxt Formatı
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.timeFormatLabel')}
                         </label>
                         <select
                           value={languageSettings.timeFormat}
                           onChange={(e) => setLanguageSettings({ ...languageSettings, timeFormat: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <option value="24h">24 saatlıq (14:30)</option>
-                          <option value="12h">12 saatlıq (2:30 PM)</option>
+                          <option value="24h">{t('settings.timeFormat24')}</option>
+                          <option value="12h">{t('settings.timeFormat12')}</option>
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Valyuta
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.currencyLabel')}
                         </label>
                         <select
                           value={languageSettings.currency}
                           onChange={(e) => setLanguageSettings({ ...languageSettings, currency: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <option value="AZN">AZN - Azərbaycan Manatı</option>
-                          <option value="USD">USD - US Dollar</option>
-                          <option value="EUR">EUR - Euro</option>
-                          <option value="RUB">RUB - Russian Ruble</option>
-                          <option value="TRY">TRY - Turkish Lira</option>
+                          <option value="AZN">{t('settings.currencyAZN')}</option>
+                          <option value="USD">{t('settings.currencyUSD')}</option>
+                          <option value="EUR">{t('settings.currencyEUR')}</option>
+                          <option value="RUB">{t('settings.currencyRUB')}</option>
+                          <option value="TRY">{t('settings.currencyTRY')}</option>
                         </select>
                       </div>
 
@@ -584,8 +614,8 @@ const Settings = () => {
                     <div className="space-y-6">
                       <div className="flex items-center justify-between py-4 border-b border-slate-100">
                         <div className="flex-1 pr-4">
-                          <div className="text-sm font-semibold text-slate-800">İki Faktorlu Autentifikasiya</div>
-                          <div className="text-xs text-slate-500 mt-1">Hesabınızı əlavə təhlükəsizlik üçün aktivləşdirin</div>
+                          <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t('settings.twoFactorAuth')}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('settings.twoFactorAuthDesc')}</div>
                         </div>
                         <button
                           type="button"
@@ -603,8 +633,8 @@ const Settings = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Sessiya Vaxtı (dəqiqə)
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.sessionTimeout')}
                         </label>
                         <input
                           type="number"
@@ -614,12 +644,12 @@ const Settings = () => {
                           onChange={(e) => setSecurity({ ...security, sessionTimeout: parseInt(e.target.value, 10) || 30 })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
-                        <p className="text-xs text-slate-500 mt-1">Fəaliyyət olmadıqda sessiya neçə dəqiqədən sonra bağlanacaq</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('settings.sessionTimeoutDesc')}</p>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Şifrə Müddəti (gün)
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.passwordExpiry')}
                         </label>
                         <input
                           type="number"
@@ -629,13 +659,13 @@ const Settings = () => {
                           onChange={(e) => setSecurity({ ...security, passwordExpiry: parseInt(e.target.value, 10) || 90 })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
-                        <p className="text-xs text-slate-500 mt-1">Şifrə neçə gündən sonra yenilənməlidir</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('settings.passwordExpiryDesc')}</p>
                       </div>
 
                       <div className="flex items-center justify-between py-4 border-b border-slate-100">
                         <div className="flex-1 pr-4">
-                          <div className="text-sm font-semibold text-slate-800">Giriş Xəbərdarlıqları</div>
-                          <div className="text-xs text-slate-500 mt-1">Yeni girişlər haqqında bildiriş alın</div>
+                          <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t('settings.loginAlerts')}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('settings.loginAlertsDesc')}</div>
                         </div>
                         <button
                           type="button"
@@ -671,60 +701,78 @@ const Settings = () => {
                     <h2 className="text-xl font-bold text-slate-800 mb-6">{t('settings.appearanceTitle')}</h2>
                     <div className="space-y-6">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Tema
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.themeLabel')}
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                           <button
                             type="button"
-                            onClick={() => setAppearance({ ...appearance, theme: 'light' })}
+                            onClick={() => {
+                              if (theme !== 'light') {
+                                toggleTheme()
+                              }
+                              setAppearance({ ...appearance, theme: 'light' })
+                            }}
                             className={`p-4 rounded-lg border-2 transition-colors ${
-                              appearance.theme === 'light'
-                                ? 'border-[#003A70] bg-blue-50'
-                                : 'border-slate-200 bg-white hover:border-slate-300'
+                              theme === 'light'
+                                ? 'border-[#003A70] bg-blue-50 dark:bg-slate-700'
+                                : 'border-slate-200 bg-white dark:bg-slate-800 hover:border-slate-300'
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-white border-2 border-slate-300" />
-                              <span className="text-sm font-semibold text-slate-800">Açıq</span>
+                              <div className={`w-8 h-8 rounded-full border-2 ${
+                                theme === 'light' 
+                                  ? 'bg-white border-[#003A70]' 
+                                  : 'bg-white border-slate-300'
+                              }`} />
+                              <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t('settings.themeLight')}</span>
                             </div>
                           </button>
                           <button
                             type="button"
-                            onClick={() => setAppearance({ ...appearance, theme: 'dark' })}
+                            onClick={() => {
+                              if (theme !== 'dark') {
+                                toggleTheme()
+                              }
+                              setAppearance({ ...appearance, theme: 'dark' })
+                            }}
                             className={`p-4 rounded-lg border-2 transition-colors ${
-                              appearance.theme === 'dark'
-                                ? 'border-[#003A70] bg-blue-50'
-                                : 'border-slate-200 bg-white hover:border-slate-300'
+                              theme === 'dark'
+                                ? 'border-[#003A70] bg-blue-50 dark:bg-slate-700'
+                                : 'border-slate-200 bg-white dark:bg-slate-800 hover:border-slate-300'
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-300" />
-                              <span className="text-sm font-semibold text-slate-800">Qaranlıq</span>
+                              <div className={`w-8 h-8 rounded-full border-2 ${
+                                theme === 'dark' 
+                                  ? 'bg-slate-800 border-[#003A70]' 
+                                  : 'bg-slate-800 border-slate-300'
+                              }`} />
+                              <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t('settings.themeDark')}</span>
                             </div>
                           </button>
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Şrift Ölçüsü
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('settings.fontSizeLabel')}
                         </label>
                         <select
                           value={appearance.fontSize}
                           onChange={(e) => setAppearance({ ...appearance, fontSize: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <option value="small">Kiçik</option>
-                          <option value="medium">Orta</option>
-                          <option value="large">Böyük</option>
+                          <option value="small">{t('settings.fontSizeSmall')}</option>
+                          <option value="medium">{t('settings.fontSizeMedium')}</option>
+                          <option value="large">{t('settings.fontSizeLarge')}</option>
                         </select>
                       </div>
 
                       <div className="flex items-center justify-between py-4 border-b border-slate-100">
                         <div className="flex-1 pr-4">
-                          <div className="text-sm font-semibold text-slate-800">Kompakt Rejim</div>
-                          <div className="text-xs text-slate-500 mt-1">Daha az boşluq, daha çox məlumat</div>
+                          <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t('settings.compactMode')}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('settings.compactModeDesc')}</div>
                         </div>
                         <button
                           type="button"

@@ -49,8 +49,20 @@ const Profile = () => {
         try {
           const date = new Date(userData.birthDate)
           if (!isNaN(date.getTime())) {
-            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                          'July', 'August', 'September', 'October', 'November', 'December']
+            const months = [
+            t('dashboard.months.january'),
+            t('dashboard.months.february'),
+            t('dashboard.months.march'),
+            t('dashboard.months.april'),
+            t('dashboard.months.may'),
+            t('dashboard.months.june'),
+            t('dashboard.months.july'),
+            t('dashboard.months.august'),
+            t('dashboard.months.september'),
+            t('dashboard.months.october'),
+            t('dashboard.months.november'),
+            t('dashboard.months.december')
+          ]
             formattedDate = `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`
           }
         } catch (e) {
@@ -92,7 +104,7 @@ const Profile = () => {
         console.error('Error loading security settings:', e)
       }
     }
-  }, [])
+  }, [t])
 
   const logout = async () => {
     try {
@@ -189,7 +201,7 @@ const Profile = () => {
               type="button"
               onClick={() => setSidebarOpen(false)}
               className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
-              aria-label="Close menu"
+              aria-label={t('common.closeMenu')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -292,7 +304,13 @@ const Profile = () => {
                   <div className="flex-shrink-0 flex flex-col items-center lg:items-start">
                     <div className="relative">
                       <div className="w-32 h-32 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center shadow-lg">
-                        <span className="text-2xl text-slate-500">MR</span>
+                        <span className="text-2xl text-slate-500">
+                          {formData.name && formData.surname
+                            ? `${formData.name.charAt(0)}${formData.surname.charAt(0)}`.toUpperCase()
+                            : formData.name
+                            ? formData.name.charAt(0).toUpperCase()
+                            : 'U'}
+                        </span>
                       </div>
                       <button className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center shadow-md hover:bg-blue-200 transition-colors">
                         <Icon.edit className="w-4 h-4 text-[#003A70]" />
@@ -306,8 +324,8 @@ const Profile = () => {
                       {/* Left Column */}
                       <div className="space-y-5">
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Your Name
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                            {t('profile.yourName')}
                           </label>
                           <input
                             type="text"
@@ -319,8 +337,8 @@ const Profile = () => {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Email
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                            {t('profile.email')}
                           </label>
                           <input
                             type="email"
@@ -332,8 +350,8 @@ const Profile = () => {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Date of Birth
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                            {t('profile.dateOfBirth')}
                           </label>
                           <div className="relative">
                             <input
@@ -360,8 +378,8 @@ const Profile = () => {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Permanent Address
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                            {t('profile.permanentAddress')}
                           </label>
                           <input
                             type="text"
@@ -373,8 +391,8 @@ const Profile = () => {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Postal Code
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                            {t('profile.postalCode')}
                           </label>
                           <input
                             type="text"
@@ -389,8 +407,8 @@ const Profile = () => {
                       {/* Right Column */}
                       <div className="space-y-5">
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            User Name
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                            {t('profile.userName')}
                           </label>
                           <input
                             type="text"
@@ -402,8 +420,8 @@ const Profile = () => {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Password
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                            {t('profile.password')}
                           </label>
                           <input
                             type="password"
@@ -415,8 +433,8 @@ const Profile = () => {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Present Address
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                            {t('profile.presentAddress')}
                           </label>
                           <input
                             type="text"
@@ -428,8 +446,8 @@ const Profile = () => {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            City
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                            {t('profile.city')}
                           </label>
                           <input
                             type="text"
@@ -441,8 +459,8 @@ const Profile = () => {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Country
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                            {t('profile.country')}
                           </label>
                           <input
                             type="text"
@@ -464,7 +482,7 @@ const Profile = () => {
                     onClick={handleSave}
                     className="inline-flex items-center justify-center rounded-lg bg-[#003A70] text-white text-sm font-semibold px-6 py-2.5 shadow-sm hover:bg-[#02498f] transition-colors"
                   >
-                    Save
+                    {t('common.save')}
                   </button>
                 </div>
               </div>
@@ -476,8 +494,8 @@ const Profile = () => {
                 <div className="space-y-6">
                   {/* Currency */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Currency
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                      {t('profile.currency')}
                     </label>
                     <input
                       type="text"
@@ -489,8 +507,8 @@ const Profile = () => {
 
                   {/* Time Zone */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Time Zone
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                      {t('profile.timeZone')}
                     </label>
                     <input
                       type="text"
@@ -502,24 +520,24 @@ const Profile = () => {
 
                   {/* Notification */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-4">
-                      Notification
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">
+                      {t('profile.notification')}
                     </label>
                     <div className="space-y-4">
                       <ToggleSwitch
                         enabled={preferences.digitalCurrency}
                         onChange={(value) => setPreferences({ ...preferences, digitalCurrency: value })}
-                        label="I send or receive digita currency"
+                        label={t('profile.digitalCurrency')}
                       />
                       <ToggleSwitch
                         enabled={preferences.merchantOrder}
                         onChange={(value) => setPreferences({ ...preferences, merchantOrder: value })}
-                        label="I receive merchant order"
+                        label={t('profile.merchantOrder')}
                       />
                       <ToggleSwitch
                         enabled={preferences.recommendations}
                         onChange={(value) => setPreferences({ ...preferences, recommendations: value })}
-                        label="There are recommendation for my account"
+                        label={t('profile.recommendations')}
                       />
                     </div>
                   </div>
@@ -532,7 +550,7 @@ const Profile = () => {
                     onClick={handleSave}
                     className="inline-flex items-center justify-center rounded-lg bg-[#003A70] text-white text-sm font-semibold px-6 py-2.5 shadow-sm hover:bg-[#02498f] transition-colors"
                   >
-                    Save
+                    {t('common.save')}
                   </button>
                 </div>
               </div>
@@ -544,12 +562,12 @@ const Profile = () => {
                 <div className="space-y-8">
                   {/* Two-factor Authentication */}
                   <div>
-                    <h3 className="text-base font-semibold text-slate-800 mb-4">
-                      Two-factor Authentication
+                    <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200 mb-4">
+                      {t('profile.twoFactorAuth')}
                     </h3>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-600">
-                        Enable or disable two factor authentication
+                      <span className="text-sm text-slate-600 dark:text-slate-400">
+                        {t('profile.twoFactorAuthDesc')}
                       </span>
                       <button
                         type="button"
@@ -569,13 +587,13 @@ const Profile = () => {
 
                   {/* Change Password */}
                   <div>
-                    <h3 className="text-base font-semibold text-slate-800 mb-4">
-                      Change Password
+                    <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200 mb-4">
+                      {t('profile.changePassword')}
                     </h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Current Password
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('profile.currentPassword')}
                         </label>
                         <input
                           type="password"
@@ -586,8 +604,8 @@ const Profile = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          New Password
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                          {t('profile.newPassword')}
                         </label>
                         <input
                           type="password"
@@ -608,7 +626,7 @@ const Profile = () => {
                     onClick={handleSave}
                     className="inline-flex items-center justify-center rounded-lg bg-[#003A70] text-white text-sm font-semibold px-6 py-2.5 shadow-sm hover:bg-[#02498f] transition-colors"
                   >
-                    Save
+                    {t('common.save')}
                   </button>
                 </div>
               </div>

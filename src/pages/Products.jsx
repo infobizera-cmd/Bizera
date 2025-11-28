@@ -366,23 +366,11 @@ const Products = () => {
                   <span className="whitespace-nowrap">{t('products.addNew')}</span>
                 </button>
               </div>
-              <div className="flex items-center gap-3 sm:gap-4 md:justify-between">
-                <div className="relative flex-1 sm:max-w-md md:max-w-none md:flex-1">
-                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                    <Icon.search className="w-4 h-4" />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder={t('products.searchPlaceholder')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
-                  />
-                </div>
+              <div className="flex items-center justify-end gap-3 sm:gap-4">
                 <button 
                   type="button"
                   onClick={openAddProductModal}
-                  className="hidden md:inline-flex items-center gap-2 rounded-md bg-[#00417F] text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 shadow-sm hover:bg-[#02498f] shrink-0 ml-auto md:ml-0"
+                  className="inline-flex items-center gap-2 rounded-md bg-[#00417F] text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 shadow-sm hover:bg-[#02498f] shrink-0"
                 >
                   <span className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0B4C8A] shadow-sm text-sm sm:text-base leading-none">
                     +

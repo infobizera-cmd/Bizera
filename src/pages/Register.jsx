@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import bizeraLogo from '../assets/bizera.png'
@@ -7,8 +7,15 @@ import { authAPI } from '../services/api'
 import { saveUserData } from '../utils/userStorage'
 // import FeatureCard from '../components/FeatureCard'
 
+// Globe Icon Component
+const GlobeIcon = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+  </svg>
+)
+
 const Register = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     name: '',
@@ -23,6 +30,40 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [langOpen, setLangOpen] = useState(false)
+  const langRef = useRef(null)
+
+  const languages = [
+    { code: 'az', name: 'Azərbaycan', flag: '🇦🇿' },
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'ru', name: 'Русский', flag: '🇷🇺' }
+  ]
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng).then(() => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('bizera_language', lng)
+      }
+      setLangOpen(false)
+    })
+  }
+
+  // Close language selector when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (langRef.current && !langRef.current.contains(event.target)) {
+        setLangOpen(false)
+      }
+    }
+
+    if (langOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [langOpen])
 
   const businessCategories = useMemo(() => [
     t('auth.selectCategory'),
@@ -130,13 +171,13 @@ const Register = () => {
         </div>
         
         <div className="flex-1 flex flex-col justify-center my-8 lg:my-0">
-  <h1 className="text-white text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-5 sm:mb-6 md:mb-7 leading-tight tracking-tight drop-shadow-lg">
-    BizEra ilə yeni biznesinə start ver
-  </h1>
-  <p className="text-white/90 text-lg sm:text-xl md:text-2xl max-w-3xl leading-relaxed drop-shadow-md">
-    Şəxsi panelini yaradaraq komandana axsmart analitik dünyanı aç.
-  </p>
-</div>
+          <h1 className="text-white text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-5 sm:mb-6 md:mb-7 leading-tight tracking-tight drop-shadow-lg">
+            {t('auth.registerTitle')}
+          </h1>
+          <p className="text-white/90 text-lg sm:text-xl md:text-2xl max-w-3xl leading-relaxed drop-shadow-md">
+            {t('auth.registerSubtitle')}
+          </p>
+        </div>
 
 
         {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 md:gap-6 mt-8 lg:mt-0">
@@ -154,7 +195,43 @@ const Register = () => {
       </div>
 
       {/* Right Panel - Register Form */}
-      <div className="bg-gray-50 w-full lg:flex-1 min-h-screen lg:min-h-0 flex flex-col items-center justify-start lg:justify-center pt-5 sm:pt-6 md:pt-7 p-4 sm:p-6 md:p-8 lg:p-11 overflow-hidden">
+      <div className="bg-gray-50 w-full lg:flex-1 min-h-screen lg:min-h-0 flex flex-col items-center justify-start lg:justify-center pt-5 sm:pt-6 md:pt-7 p-4 sm:p-6 md:p-8 lg:p-11 overflow-hidden relative">
+        {/* Language Selector */}
+        <div className="absolute top-4 sm:top-6 right-4 sm:right-6" ref={langRef}>
+          <button
+            type="button"
+            onClick={() => setLangOpen(!langOpen)}
+            className="p-2 rounded-lg hover:bg-gray-200 text-gray-600 transition-colors"
+            aria-label={t('common.changeLanguage')}
+          >
+            <GlobeIcon className="w-5 h-5" />
+          </button>
+          {langOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 p-2 z-50">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => changeLanguage(lang.code)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                    i18n.language === lang.code
+                      ? 'bg-[#003A70] text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <span className="text-lg">{lang.flag}</span>
+                  <span className="text-sm font-medium">{lang.name}</span>
+                  {i18n.language === lang.code && (
+                    <svg className="w-4 h-4 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="flex justify-center mb-5 sm:mb-6 md:mb-7 lg:hidden">
@@ -238,7 +315,7 @@ const Register = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="example@bizera.ai"
+                placeholder={t('auth.emailPlaceholder')}
                 className="w-full px-3 sm:px-3.5 py-2 sm:py-2.5 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm transition-all placeholder:text-gray-400"
                 required
               />
@@ -256,7 +333,7 @@ const Register = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Ultra təhlükəsiz şifrə"
+                  placeholder={t('auth.passwordPlaceholderRegister')}
                   className="w-full pr-10 px-3 sm:px-3.5 py-2 sm:py-2.5 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm transition-all placeholder:text-gray-400"
                   required
                   disabled={isLoading}
@@ -264,7 +341,7 @@ const Register = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
-                  aria-label={showPassword ? 'Şifrəni gizlə' : 'Şifrəni göstər'}
+                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                   className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
                 >
                   {showPassword ? (
@@ -324,7 +401,7 @@ const Register = () => {
                   name="businessName"
                   value={formData.businessName}
                   onChange={handleChange}
-                  placeholder="BizEra Store"
+                  placeholder={t('auth.businessNamePlaceholder')}
                   className="w-full px-3 sm:px-3.5 py-2 sm:py-2.5 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm transition-all placeholder:text-gray-400"
                   required
                 />
@@ -360,7 +437,7 @@ const Register = () => {
                   name="phoneNumber"
                   value={formData.phoneNumber}
                   onChange={handleChange}
-                  placeholder="+994"
+                  placeholder={t('auth.phonePlaceholder')}
                   className="w-full px-3 sm:px-3.5 py-2 sm:py-2.5 bg-gray-100 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm transition-all placeholder:text-gray-400"
                   required
                 />

@@ -1,3 +1,5 @@
+import i18n from '../../i18n/config'
+
 const API_BASE_URL = 'https://bizera-app-production.up.railway.app/api'
 
 /**
@@ -35,7 +37,7 @@ const apiRequest = async (endpoint, options = {}) => {
       console.log(`🔐 Login Response: ${endpoint}`, {
         status: response.status,
         ok: response.ok,
-        'set-cookie': setCookieHeader ? '✅ Cookie set edildi' : '❌ Cookie set edilmədi',
+        'set-cookie': setCookieHeader ? `✅ ${i18n.t('common.cookieSet')}` : `❌ ${i18n.t('common.cookieNotSet')}`,
         'access-control-allow-credentials': allowCredentials ? '✅' : '❌',
         'access-control-allow-origin': allowOrigin || '❌'
       })
@@ -43,9 +45,9 @@ const apiRequest = async (endpoint, options = {}) => {
       // Login zamanı cookie-nin set edildiyini yoxla
       if (response.ok) {
         if (!setCookieHeader) {
-          console.warn('⚠️ WARNING: Login zamanı cookie set edilmədi!')
+          console.warn(`⚠️ WARNING: ${i18n.t('common.loginWarning')}`)
         } else {
-          console.log('✅ Login uğurlu - cookie set edildi')
+          console.log(`✅ ${i18n.t('common.loginSuccessful')}`)
         }
       }
     }
@@ -97,10 +99,10 @@ const apiRequest = async (endpoint, options = {}) => {
     if (!response.ok) {
       // For 401 errors, provide more specific message
       if (response.status === 401) {
-        const errorMessage = data?.message || data?.error || data?.title || 'Giriş vaxtı bitib və ya cookie yoxdur. Zəhmət olmasa yenidən daxil olun.'
+        const errorMessage = data?.message || data?.error || data?.title || i18n.t('common.sessionExpired')
         console.error('❌ 401 Unauthorized:', {
           endpoint,
-          cookies: document.cookie ? 'Cookie-lər var' : 'Cookie yoxdur',
+          cookies: document.cookie ? i18n.t('common.cookiesAvailable') : i18n.t('common.cookiesNotAvailable'),
           hasCredentials: config.credentials === 'include' ? '✅' : '❌'
         })
         throw new Error(errorMessage)
@@ -116,9 +118,9 @@ const apiRequest = async (endpoint, options = {}) => {
     if (error instanceof TypeError) {
       // Network error or CORS issue
       if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-        throw new Error('Şəbəkə xətası. Zəhmət olmasa internet bağlantınızı yoxlayın və ya bir az sonra yenidən cəhd edin.')
+        throw new Error(i18n.t('common.networkError'))
       }
-      throw new Error('Şəbəkə xətası. Zəhmət olmasa bağlantınızı yoxlayın.')
+      throw new Error(i18n.t('common.networkErrorShort'))
     }
     
     // Re-throw with original message if it's already an Error

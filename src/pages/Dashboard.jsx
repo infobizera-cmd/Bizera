@@ -523,6 +523,7 @@ const Dashboard = () => {
   const [transactions, setTransactions] = useState([])
   const [contactsStats, setContactsStats] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Load dashboard data
   useEffect(() => {
@@ -644,7 +645,7 @@ const Dashboard = () => {
         
         // Don't logout on 401 - just show error and use default data
         // User can still use the dashboard with default data
-        setError('Bəzi məlumatlar yüklənə bilmədi. Zəhmət olmasa yenidən cəhd edin.')
+        setError(t('common.errorLoadingData'))
         
         // Set default data on error so user can still see the dashboard
         setMetrics(null)
@@ -747,7 +748,7 @@ const Dashboard = () => {
               type="button"
               onClick={() => setSidebarOpen(false)}
               className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
-              aria-label="Close menu"
+              aria-label={t('common.closeMenu')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -810,7 +811,12 @@ const Dashboard = () => {
         {/* Main */}
         <main className="flex-1 w-full md:w-auto">
           {/* Top bar */}
-          <TopBar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <TopBar 
+            sidebarOpen={sidebarOpen} 
+            setSidebarOpen={setSidebarOpen}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
 
           {/* Content */}
           <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 py-6 sm:py-8">

@@ -72,6 +72,17 @@ const Expenses = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Filter expenses by search query
+  const filteredExpenses = expenses.filter((expense) => {
+    if (!searchQuery) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      expense.name?.toLowerCase().includes(query) ||
+      expense.category?.toLowerCase().includes(query) ||
+      expense.price?.toLowerCase().includes(query)
+    )
+  })
+
   const logout = async () => {
     try {
       // Cookie-based auth - logout will clear cookie on backend
@@ -110,7 +121,7 @@ const Expenses = () => {
               type="button"
               onClick={() => setSidebarOpen(false)}
               className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
-              aria-label="Close menu"
+              aria-label={t('common.closeMenu')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -200,7 +211,12 @@ const Expenses = () => {
 
               {/* Table Rows */}
               <div>
-                {expenses.map((expense) => (
+                {filteredExpenses.length === 0 ? (
+                  <div className="px-3 sm:px-6 py-6 sm:py-8 text-center text-slate-500 text-sm sm:text-base">
+                    {searchQuery ? t('expenses.noSearchResults') : t('expenses.noExpenses')}
+                  </div>
+                ) : (
+                  filteredExpenses.map((expense) => (
                   <div
                     key={expense.id}
                     className="grid grid-cols-[100px_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_70px_100px] sm:grid-cols-[120px_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_80px_120px] min-w-[700px] px-3 sm:px-6 py-3 sm:py-4 border-t border-slate-100 hover:bg-slate-50/60 items-center text-xs sm:text-sm"
@@ -229,7 +245,8 @@ const Expenses = () => {
                     {/* Date */}
                     <div className="text-xs sm:text-[13px] text-slate-800 text-center whitespace-nowrap">{expense.date}</div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>

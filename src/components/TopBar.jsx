@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../contexts/ThemeContext'
@@ -48,6 +48,8 @@ const TopBar = ({ sidebarOpen, setSidebarOpen, showBackButton = false, onBack, s
   const { theme, toggleTheme } = useTheme()
   const [notifOpen, setNotifOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
+  const notifRef = useRef(null)
+  const langRef = useRef(null)
   
   const userData = getUserData()
   const displayName = userData?.fullName || 
@@ -92,6 +94,26 @@ const TopBar = ({ sidebarOpen, setSidebarOpen, showBackButton = false, onBack, s
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0]
 
+  // Close notifications when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setNotifOpen(false)
+      }
+      if (langRef.current && !langRef.current.contains(event.target)) {
+        setLangOpen(false)
+      }
+    }
+
+    if (notifOpen || langOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [notifOpen, langOpen])
+
   return (
     <div className="sticky top-0 z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
       <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-3">
@@ -101,7 +123,7 @@ const TopBar = ({ sidebarOpen, setSidebarOpen, showBackButton = false, onBack, s
             type="button"
             onClick={() => setSidebarOpen(true)}
             className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0"
-            aria-label="Open menu"
+            aria-label={t('common.openMenu')}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -114,7 +136,7 @@ const TopBar = ({ sidebarOpen, setSidebarOpen, showBackButton = false, onBack, s
               type="button"
               onClick={onBack}
               className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0"
-              aria-label="Go back"
+              aria-label={t('common.goBack')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -140,12 +162,12 @@ const TopBar = ({ sidebarOpen, setSidebarOpen, showBackButton = false, onBack, s
         {/* Right side icons and user */}
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
           {/* Language Selector */}
-          <div className="relative">
+          <div className="relative" ref={langRef}>
             <button
               type="button"
               onClick={() => setLangOpen(!langOpen)}
               className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
-              aria-label="Change language"
+              aria-label={t('common.changeLanguage')}
             >
               <GlobeIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
@@ -180,7 +202,7 @@ const TopBar = ({ sidebarOpen, setSidebarOpen, showBackButton = false, onBack, s
             type="button"
             onClick={toggleTheme}
             className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
-            aria-label="Toggle theme"
+            aria-label={t('common.toggleTheme')}
           >
             {theme === 'dark' ? (
               <SunIcon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -190,12 +212,12 @@ const TopBar = ({ sidebarOpen, setSidebarOpen, showBackButton = false, onBack, s
           </button>
 
           {/* Notifications */}
-          <div className="relative">
+          <div className="relative" ref={notifRef}>
             <button
               type="button"
               onClick={() => setNotifOpen((v) => !v)}
               className="relative p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
-              aria-label="Notifications"
+              aria-label={t('common.notifications')}
             >
               <BellIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="absolute -top-0.5 -right-0.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-rose-500 rounded-full"></span>
@@ -203,25 +225,33 @@ const TopBar = ({ sidebarOpen, setSidebarOpen, showBackButton = false, onBack, s
             {notifOpen && (
               <div className="absolute right-0 mt-2 w-72 sm:w-80 md:w-96 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-3 z-50">
                 <div className="flex items-center justify-between text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-2">
-                  <span>November 2025</span>
+                  <span>{new Date().toLocaleDateString(i18n.language === 'az' ? 'az-AZ' : i18n.language === 'ru' ? 'ru-RU' : 'en-US', { month: 'long', year: 'numeric' })}</span>
                   <button className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-xs">
-                    Read All
+                    {t('common.readAll')}
                   </button>
                 </div>
-                {[1,2,3,4].map((i) => (
-                  <div key={i} className="flex items-start gap-2 sm:gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-200 dark:bg-slate-600 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-semibold leading-4 sm:leading-5">
-                        Meg Griffin left you a review. Both reviews are now public.
-                      </div>
-                      <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">March 1, 2023</div>
-                    </div>
-                    <button className="text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 shrink-0">
-                      <TrashIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </button>
+                {[1,2,3,4].length === 0 ? (
+                  <div className="text-center py-4 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                    {t('common.noNotifications')}
                   </div>
-                ))}
+                ) : (
+                  [1,2,3,4].map((i) => (
+                    <div key={i} className="flex items-start gap-2 sm:gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-200 dark:bg-slate-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-semibold leading-4 sm:leading-5">
+                          {t('common.notifications')}
+                        </div>
+                        <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          {new Date().toLocaleDateString(i18n.language === 'az' ? 'az-AZ' : i18n.language === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </div>
+                      </div>
+                      <button className="text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 shrink-0" aria-label={t('common.delete')}>
+                        <TrashIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
